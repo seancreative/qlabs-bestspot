@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#0a0a0b" />
   <title>NEARBY — Social Food Discovery</title>
+  <meta name="description" content="A web prototype for scrolling nearby food and exploring Google, Instagram, and TikTok reviews." />
   <style>
     :root{
       --bg:#09090b;
@@ -129,6 +130,78 @@
       .app{max-width:520px;margin:auto;border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06);box-shadow:0 0 80px rgba(0,0,0,.45)}
       body{background:#050506}
     }
+
+    /* Working prototype: preserve the original full-screen glass interface. */
+    [inert]{pointer-events:none}
+    button,a,input{touch-action:manipulation}
+    button{cursor:pointer}
+    button:focus-visible,a:focus-visible,input:focus-visible,.feed:focus-visible{outline:2px solid #ffb77a;outline-offset:4px}
+    .home:not(.show){visibility:hidden}
+    .home.show{visibility:visible}
+    .landing.hide{visibility:hidden}
+    .demo-note{font-size:12px;color:var(--muted);margin-top:10px}
+    .location-pill{font-size:14px;max-width:calc(100% - 138px);flex-shrink:1}
+    .range-pill{font-size:14px;flex-shrink:0}
+    .icon-btn{flex-shrink:0}
+    .icon-btn.active{background:#fff;color:#111}
+    .filter-bar{position:absolute;z-index:31;left:0;right:0;top:calc(max(16px,env(safe-area-inset-top)) + 54px);display:flex;gap:7px;padding:0 16px 10px;overflow:auto;scrollbar-width:none}
+    .filter-bar::-webkit-scrollbar{display:none}
+    .filter-bar[hidden]{display:none}
+    .filter-chip{flex-shrink:0;border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:9px 13px;font-size:14px;color:#eee;background:rgba(15,15,18,.65);backdrop-filter:blur(18px)}
+    .filter-chip.active{background:#fff;border-color:#fff;color:#111}
+    .reel-bg{background-color:#292326}
+    .reel:after{background:linear-gradient(180deg,rgba(0,0,0,.5),rgba(0,0,0,.03) 34%,rgba(0,0,0,.2) 52%,rgba(0,0,0,.86) 88%,#08080a 100%)}
+    .source-tag{top:calc(max(16px,env(safe-area-inset-top)) + 110px);font-size:12px;letter-spacing:.02em;text-transform:none;color:#fff;background:rgba(0,0,0,.55)}
+    .reel-content{bottom:calc(112px + env(safe-area-inset-bottom));gap:10px}
+    .distance{font-size:14px;gap:0;margin-bottom:12px}
+    .dish-button{border:0;padding:0;background:none;text-align:left;color:inherit}
+    .dish{font-size:32px;line-height:1.08;overflow-wrap:anywhere}
+    .creator{font-size:13px;margin:8px 0 0}
+    .rating-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:9px 0;font-size:14px;color:#fff}
+    .rating-button{border:0;padding:0;background:none;font-size:14px;font-weight:650}
+    .rating-button .star{color:#ffd88b}
+    .tiny-sep{color:rgba(255,255,255,.5)}
+    .source-links{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+    .source-link{padding:7px 10px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.07);border-radius:10px;font-size:12px;min-height:34px}
+    .action-stack{gap:15px}.action-label{font-size:12px;margin-top:4px;color:#eee}.action{width:46px;height:46px;background:rgba(16,16,18,.65)}
+    .action.is-saved{color:#ffcf9f;border-color:#ffcf9f;background:rgba(255,153,76,.16)}
+    .action.is-saved svg{fill:currentColor}
+    .swipe-hint{bottom:calc(82px + env(safe-area-inset-bottom));font-size:12px;opacity:.65;letter-spacing:.03em;animation:none;flex-direction:row}
+    .nav-btn{font-size:14px}
+    .map-screen,.saved-screen{display:none}.map-screen.show,.saved-screen.show{display:block}
+    .map-label{position:absolute;top:132px;left:18px;color:#ccc;font-size:14px;z-index:3}
+    .map-card{bottom:calc(94px + env(safe-area-inset-bottom));align-items:center}
+    .map-card h3{font-size:16px}.map-card p{font-size:14px}.map-card img{width:64px;height:74px}.map-card .mini-cta{flex-shrink:0;cursor:pointer}
+    .pin{width:54px;height:54px}.pin.selected{border:2px solid #ffbf84;background:#ffbf84}.pin img{border-radius:17px}
+    .map-pin-label{position:absolute;left:50%;transform:translateX(-50%);top:56px;border-radius:8px;white-space:nowrap;background:#151518;padding:4px 7px;font-size:12px;color:#eee}
+    .map-empty{position:absolute;top:42%;left:22px;right:22px;text-align:center;color:#eee}
+    .saved-screen{padding-top:132px}.saved-screen>p{font-size:14px}
+    .saved-card{width:100%;padding:0;color:#fff;text-align:left;cursor:pointer;min-width:0}
+    .saved-card span{font-size:12px}.saved-card b{overflow-wrap:anywhere}
+    .empty-state{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:160px 26px 120px;background:linear-gradient(140deg,#242026,#09090b)}
+    .empty-state h2{font-size:28px;margin:0 0 12px;letter-spacing:-.03em}.empty-state p{font-size:16px;line-height:1.5;color:var(--muted);margin:0 0 22px;max-width:270px}.empty-state button{width:auto;min-width:160px}
+    .saved-empty{grid-column:1/-1;padding:40px 0;color:var(--muted);font-size:16px;line-height:1.6}
+    .sheet-dialog{position:fixed;inset:auto 0 0;margin:0 auto;width:min(calc(100% - 24px),496px);max-height:calc(100svh - 36px);border-radius:30px 30px 0 0;padding:14px 20px calc(24px + env(safe-area-inset-bottom));color:#fff;border:1px solid rgba(255,255,255,.17);background:rgba(21,21,24,.97);box-shadow:0 -20px 90px rgba(0,0,0,.5);overflow-y:auto;overscroll-behavior:contain}
+    .sheet-dialog::backdrop{background:rgba(0,0,0,.58);backdrop-filter:blur(5px)}
+    .sheet-dialog h2{font-size:24px;line-height:1.2;letter-spacing:-.03em;margin:10px 0 12px}.sheet-dialog h3{font-size:18px;line-height:1.3}
+    .dialog-top{position:relative;min-height:30px}.dialog-top .grab{margin:0 auto}.close-btn{position:absolute;right:-6px;top:-5px;display:grid;place-items:center;width:40px;height:40px;background:rgba(255,255,255,.08);border:1px solid var(--stroke);border-radius:50%;font-size:25px;line-height:1}
+    .muted{font-size:14px;line-height:1.6;color:var(--muted);margin:0 0 18px}
+    .sheet-dialog .range-option{font-size:14px;min-height:48px}.sheet-dialog .secondary{font-size:14px;min-height:44px}
+    #searchInput{width:100%;padding:15px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid var(--stroke);color:#fff;font-size:16px;margin:5px 0 14px}
+    .detail-photo{width:100%;height:150px;object-fit:cover;border-radius:20px;margin-top:8px}
+    .detail-meta{display:flex;gap:8px;flex-wrap:wrap;font-size:14px;color:#ddd;margin:12px 0 18px}
+    .detail-meta span{background:rgba(255,255,255,.06);padding:7px 10px;border-radius:10px}
+    .detail-actions{display:flex;gap:8px;margin:0 0 20px}.detail-actions button{width:auto;flex:1;font-size:14px;padding:13px 8px}.detail-actions .outline{border:1px solid var(--stroke);background:transparent;color:#fff}
+    .review-tabs{display:flex;gap:6px;overflow:auto;padding-bottom:12px}.review-tab{font-size:14px;padding:10px 12px;white-space:nowrap;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--stroke)}.review-tab.active{background:#fff;color:#111}
+    .review-card{border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:15px;margin:0 0 10px;background:rgba(255,255,255,.035)}
+    .review-head{display:flex;gap:10px;align-items:center;margin-bottom:10px}.review-avatar{width:34px;height:34px;display:grid;place-items:center;background:rgba(255,183,122,.12);color:#ffc997;border-radius:50%;font-size:14px}.review-by{flex:1;font-size:14px}.review-by small{display:block;font-size:12px;color:var(--muted);margin-top:3px}.review-source{font-size:12px;color:#ddd}.review-card p{font-size:16px;line-height:1.55;margin:6px 0}.review-foot{font-size:12px;color:var(--muted);margin-top:12px}.review-stars{color:#ffd88b;letter-spacing:2px;font-size:14px}
+    .demo-label{display:inline-block;margin-bottom:10px;color:#ffceaa;font-size:12px}.reviews-note{font-size:12px;color:var(--muted);line-height:1.5;margin:14px 0 0}
+    .route-preview{padding:20px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid var(--stroke);margin:16px 0}.route-preview strong{font-size:30px;display:block;margin:6px 0}.external-link{display:block;text-decoration:none;text-align:center;margin-top:18px;font-size:14px}
+    .toast{position:absolute;z-index:100;left:50%;bottom:calc(95px + env(safe-area-inset-bottom));transform:translate(-50%,10px);width:max-content;max-width:calc(100% - 40px);padding:12px 16px;border:1px solid rgba(255,255,255,.2);border-radius:16px;background:#242427;color:#fff;font-size:14px;box-shadow:0 12px 40px #0006;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;text-align:center}.toast.show{opacity:1;transform:translate(-50%,0)}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    @media(max-height:690px){.dish{font-size:26px}.action-stack{gap:9px}.reel-content{bottom:calc(98px + env(safe-area-inset-bottom))}.source-links{margin-top:8px}.swipe-hint{display:none}.creator{margin-top:4px}.detail-photo{height:100px}.hero-card{padding:24px}.mark{margin-bottom:20px}.hero-card p{margin:14px auto 20px}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.reel-bg,.reel.active .reel-bg{transform:none}}
+
   </style>
 </head>
 <body>
@@ -142,125 +215,178 @@
       </div>
       <div class="eyebrow">Food around you</div>
       <h1>What’s good<br>nearby?</h1>
-      <p>See food people are posting around you. No lists. No digging.</p>
+      <p>Find your next bite. Food, reviews, and places around you.</p>
       <button class="primary" id="locateBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8" opacity=".3"/></svg>
         <span>Use my location</span>
       </button>
-      <button class="secondary" id="demoBtn">Preview nearby food</button>
+      <button class="secondary" id="demoBtn">Preview nearby food</button><div class="demo-note">Prototype · sample food &amp; reviews</div>
     </div>
   </section>
 
-  <main class="home" id="home">
+  <main class="home" id="home" inert>
     <header class="topbar">
-      <div class="location-pill"><i class="dot"></i><span id="locationName">Nearby</span></div>
-      <button class="range-pill" id="rangeBtn"><span id="rangeText">1 km</span></button>
-      <button class="icon-btn" aria-label="search">
+      <button class="location-pill" id="areaBtn" aria-label="Location options"><span id="locationName">Ampang · Demo</span></button>
+      <button class="range-pill" id="rangeBtn" aria-label="Distance filter"><span id="rangeText">1 km</span></button>
+      <button class="icon-btn" id="searchBtn" aria-label="Search food">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
       </button>
     </header>
 
-    <section class="feed" id="feed"></section>
+    <div class="filter-bar" aria-label="Food filters">
+      <button class="filter-chip active" data-category="all" aria-pressed="true">All food</button>
+      <button class="filter-chip" data-category="meals" aria-pressed="false">Meals</button>
+      <button class="filter-chip" data-category="sweet" aria-pressed="false">Sweet</button>
+      <button class="filter-chip" id="openBtn" aria-pressed="false">Open now</button>
+      <button class="filter-chip" id="budgetBtn" aria-pressed="false">Under RM20</button>
+    </div>
+    <section class="feed" id="feed" aria-label="Nearby food feed" tabindex="0"></section>
 
-    <section class="map-screen" id="mapScreen">
+    <section class="map-screen" id="mapScreen" inert aria-label="Demo food map">
       <div class="map-canvas"><div class="road r1"></div><div class="road r2"></div><div class="road r3"></div><div class="road r4"></div><div class="map-overlay"></div></div>
-      <div class="me-dot"></div>
-      <button class="pin p1" data-i="0"><img alt="food" src="https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=300&q=80"></button>
-      <button class="pin p2" data-i="1"><img alt="food" src="https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=300&q=80"></button>
-      <button class="pin p3" data-i="2"><img alt="food" src="https://images.unsplash.com/photo-1551782450-a2132b4ba21d?auto=format&fit=crop&w=300&q=80"></button>
-      <button class="pin p4" data-i="3"><img alt="food" src="https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=300&q=80"></button>
+      <div class="map-label">Ampang · Demo map</div>
+      <div class="me-dot" aria-hidden="true"></div>
+      <div id="mapPins"></div>
       <div class="map-card glass" id="mapCard"></div>
     </section>
 
-    <section class="saved-screen" id="savedScreen">
+    <section class="saved-screen" id="savedScreen" inert>
       <h2>Saved</h2><p>Food worth coming back for.</p>
       <div class="saved-grid" id="savedGrid"></div>
     </section>
 
-    <nav class="bottom-nav">
+    <nav class="bottom-nav" aria-label="Main navigation">
       <button class="nav-btn active" data-view="discover"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12 12 4l8 8-8 8-8-8Z"/><circle cx="12" cy="12" r="2.3"/></svg>Discover</button>
       <button class="nav-btn" data-view="map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 6 5-2 8 3 5-2v13l-5 2-8-3-5 2V6Z"/><path d="M8 4v13M16 7v13"/></svg>Map</button>
       <button class="nav-btn" data-view="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 4h12v17l-6-4-6 4V4Z"/></svg>Saved</button>
     </nav>
   </main>
 
-  <div class="sheet-backdrop" id="sheetBackdrop">
-    <div class="sheet"><div class="grab"></div><h3>How nearby?</h3><div class="ranges">
-      <button class="range-option" data-range="500 m">500m</button><button class="range-option active" data-range="1 km">1km</button><button class="range-option" data-range="3 km">3km</button><button class="range-option" data-range="5 km">5km</button>
-    </div></div>
-  </div>
+  <dialog class="sheet-dialog" id="rangeDialog" aria-labelledby="rangeTitle">
+    <div class="dialog-top"><div class="grab"></div><button class="close-btn" data-close aria-label="Close distance filter">×</button></div>
+    <h2 id="rangeTitle">How nearby?</h2><p class="muted">Distance in the Ampang demo.</p><div class="ranges">
+      <button class="range-option" data-range="500" aria-pressed="false">500m</button><button class="range-option active" data-range="1000" aria-pressed="true">1km</button><button class="range-option" data-range="3000" aria-pressed="false">3km</button><button class="range-option" data-range="5000" aria-pressed="false">5km</button>
+    </div>
+  </dialog>
+  <dialog class="sheet-dialog search-dialog" id="searchDialog" aria-labelledby="searchTitle">
+    <div class="dialog-top"><div class="grab"></div><button class="close-btn" data-close aria-label="Close search">×</button></div>
+    <h2 id="searchTitle">What are you craving?</h2>
+    <form id="searchForm"><label class="sr-only" for="searchInput">Search food or places</label><input id="searchInput" type="search" placeholder="Ramen, burgers, a place…" autocomplete="off" /><button class="primary" type="submit">Show food</button></form>
+    <button class="secondary" id="clearSearch">Clear search</button>
+  </dialog>
+  <dialog class="sheet-dialog detail-dialog" id="detailDialog" aria-labelledby="detailTitle"><div id="detailBody"></div></dialog>
+  <dialog class="sheet-dialog" id="areaDialog" aria-labelledby="areaTitle">
+    <div class="dialog-top"><div class="grab"></div><button class="close-btn" data-close aria-label="Close location options">×</button></div>
+    <h2 id="areaTitle">Food around you</h2><p class="muted">This prototype has sample food in Ampang. Your location stays in this browser; live nearby results will come later.</p>
+    <button class="primary" id="retryLocation">Use my location</button><button class="secondary" id="useDemo">Browse Ampang demo</button>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
 <script>
-const FOOD = [
-  {dish:'Black Garlic Ramen',restaurant:'Ramen Bar',distance:'320 m',creator:'@klfoodie',source:'Instagram Reel',img:'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=88'},
-  {dish:'Crispy Xiao Long Bao',restaurant:'Dumpling House',distance:'460 m',creator:'@eatwithsarah',source:'Instagram Reel',img:'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=1200&q=88'},
-  {dish:'Smash Cheeseburger',restaurant:'Fifty/Fifty',distance:'680 m',creator:'@hungrykl',source:'Instagram Reel',img:'https://images.unsplash.com/photo-1551782450-a2132b4ba21d?auto=format&fit=crop&w=1200&q=88'},
-  {dish:'Burnt Butter Donut',restaurant:'Sunday Bakes',distance:'810 m',creator:'@makanmakan',source:'Instagram Reel',img:'https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=1200&q=88'}
+'use strict';
+// All places, review text, prices, ratings, hours, and distances are fictional fixtures.
+// Stock photos came from the supplied interface; there are no live social posts here.
+const photos = [
+  'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=88',
+  'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=1200&q=88',
+  'https://images.unsplash.com/photo-1551782450-a2132b4ba21d?auto=format&fit=crop&w=1200&q=88',
+  'https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=1200&q=88'
 ];
+const FOOD = [
+  {id:'ramen',dish:'Black Garlic Ramen',restaurant:'Ramen Bar',meters:320,price:24,rating:4.6,count:128,category:'meals',open:true,hours:'11am–10pm',source:'Instagram',img:photos[0],description:'Rich broth, springy noodles, and a little black garlic oil.',google:['Rich, comforting broth. The black garlic makes it.','Good noodles and a generous portion. A nice lunch stop.'],social:'The garlic oil is the highlight. A bowl I would come back for.',tiktok:'A close look at the noodles, broth, and that soft egg.'},
+  {id:'dumpling',dish:'Crispy Xiao Long Bao',restaurant:'Dumpling House',meters:460,price:18,rating:4.5,count:86,category:'meals',open:true,hours:'10am–9pm',source:'TikTok',img:photos[1],description:'Juicy dumplings with a crisp base. Best shared while hot.',google:['Loved the juicy filling. Eat them while they are hot.','The crispy base is great. I would order another plate.'],social:'A dumpling stop for the next lunch break. Crispy underneath, juicy inside.',tiktok:'Breaking open a dumpling and trying the first bite.'},
+  {id:'burger',dish:'Smash Cheeseburger',restaurant:'Fifty/Fifty',meters:680,price:22,rating:4.7,count:215,category:'meals',open:true,hours:'12pm–11pm',source:'TikTok',img:photos[2],description:'Crisp-edged beef, melted cheese, and a soft toasted bun.',google:['The patty has great crispy edges. Simple and satisfying.','Good burger. The lunchtime wait can be a little long.'],social:'That cheese melt and crispy edge. Keeping this one on my list.',tiktok:'A first-bite burger review with a look inside the bun.'},
+  {id:'donut',dish:'Burnt Butter Donut',restaurant:'Sunday Bakes',meters:810,price:9,rating:4.4,count:64,category:'sweet',open:false,hours:'8am–5pm',source:'Instagram',img:photos[3],description:'A soft donut with a buttery glaze. A small afternoon treat.',google:['Soft dough and a lovely buttery glaze.','A sweet treat with coffee. It can sell out early.'],social:'Coffee and a buttery donut: my kind of afternoon break.',tiktok:'A bakery visit and a taste of the buttery glaze.'},
+  {id:'miso',dish:'Chili Miso Ramen',restaurant:'Noodle Corner',meters:1600,price:19,rating:4.3,count:72,category:'meals',open:true,hours:'11am–10pm',source:'Google',img:photos[0],description:'A warming bowl of miso broth, noodles, and a chili kick.',google:['A good spicy bowl at a friendly price.','The miso broth is warming without being too heavy.'],social:'A spicy noodle bowl for a rainy afternoon.',tiktok:'Trying the chili broth and checking the spice level.'},
+  {id:'truffle',dish:'Truffle Cheeseburger',restaurant:'Burger Lane',meters:3400,price:28,rating:4.6,count:143,category:'meals',open:true,hours:'12pm–10pm',source:'Instagram',img:photos[2],description:'Beef, cheese, and a touch of truffle sauce in a toasted bun.',google:['The truffle sauce goes well with the beef.','A filling burger. Great if you like a richer sauce.'],social:'A cheesy burger with a little truffle twist.',tiktok:'A burger taste test: sauce, patty, and bun.'}
+];
+const $ = id => document.getElementById(id);
+const esc = value => String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const svg = {
-  save:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 4h12v17l-6-4-6 4V4Z"/></svg>`,
-  dir:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 11 18-8-8 18-2-8-8-2Z"/></svg>`,
-  play:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="5"/><path d="m10 9 5 3-5 3V9Z"/></svg>`,
-  down:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m7 10 5 5 5-5"/></svg>`
+  save:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 4h12v17l-6-4-6 4V4Z"/></svg>',
+  dir:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 11 18-8-8 18-2-8-8-2Z"/></svg>',
+  reviews:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H5l-3 3V11.5A7.5 7.5 0 0 1 9.5 4h3a7.5 7.5 0 0 1 7.5 7.5Z"/><path d="M7 10h8M7 14h5"/></svg>',
+  down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m7 10 5 5 5-5"/></svg>'
 };
-const feed = document.getElementById('feed');
-feed.innerHTML = FOOD.map((f,i)=>`<article class="reel ${i===0?'active':''}" data-i="${i}"><div class="reel-bg" style="background-image:url('${f.img}')"></div><div class="source-tag">${f.source}</div><div class="reel-content"><div class="meta"><div class="distance"><i></i>${f.distance} away</div><h2 class="dish">${f.dish}</h2><p class="restaurant">${f.restaurant}</p><div class="creator">${f.creator}</div></div><div class="action-stack"><div><button class="action play">${svg.play}</button><div class="action-label">Watch</div></div><div><button class="action save" data-i="${i}">${svg.save}</button><div class="action-label">Save</div></div><div><button class="action">${svg.dir}</button><div class="action-label">Go</div></div></div></div>${i===0?`<div class="swipe-hint">Swipe for more${svg.down}</div>`:''}</article>`).join('');
-
-const landing=document.getElementById('landing'), home=document.getElementById('home'), locationName=document.getElementById('locationName');
-function enter(label='Ampang · Nearby'){
-  locationName.textContent=label; landing.classList.add('hide'); home.classList.add('show');
-  setTimeout(()=>{landing.style.display='none'},700);
+const validIds=new Set(FOOD.map(f=>f.id));
+let saved=new Set();
+try { const stored=JSON.parse(localStorage.getItem('nearby.saved.v1')||'[]'); if(Array.isArray(stored))saved=new Set(stored.filter(id=>validIds.has(id))); } catch {}
+let range=1000,category='all',query='',onlyOpen=false,budget=false,currentView='discover',activeId=FOOD[0].id,mapId=FOOD[0].id,detailId=null,reviewSource='All',toastTimer;
+const distance=f=>f.meters<1000?`${f.meters} m`:`${(f.meters/1000).toFixed(1)} km`;
+function getFood(id){return FOOD.find(f=>f.id===id);}
+function filtered(){return FOOD.filter(f=>f.meters<=range&&(category==='all'||f.category===category)&&(!onlyOpen||f.open)&&(!budget||f.price<20)&&(!query||`${f.dish} ${f.restaurant}`.toLowerCase().includes(query.toLowerCase())));}
+function notify(message){$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2700);}
+function enter(){ $('landing').classList.add('hide');$('landing').inert=true;$('home').inert=false;$('home').classList.add('show');$('feed').focus({preventScroll:true}); }
+function useLocation(){
+  enter();$('areaDialog').close();$('locationName').textContent='Locating · Demo';
+  if(!navigator.geolocation){$('locationName').textContent='Ampang · Demo';notify('Location unavailable. Browsing the Ampang demo.');return;}
+  navigator.geolocation.getCurrentPosition(()=>{ $('locationName').textContent='GPS ready · Demo';notify('Location received. Food is still the Ampang demo.'); },()=>{ $('locationName').textContent='Ampang · Demo';notify('Location unavailable. Browsing the Ampang demo.'); },{enableHighAccuracy:false,timeout:6500,maximumAge:60000});
 }
-document.getElementById('demoBtn').onclick=()=>enter('Ampang · Nearby');
-document.getElementById('locateBtn').onclick=()=>{
-  const btn=document.getElementById('locateBtn');
-  const label=btn.querySelector('span');
-  label.textContent='Opening nearby food…';
-
-  // Never leave the user waiting on the landing screen. Open the feed first,
-  // then improve the location label when the browser returns a GPS fix.
-  enter('Finding your location…');
-
-  if(!navigator.geolocation){
-    locationName.textContent='Ampang · Nearby';
-    return;
-  }
-
-  navigator.geolocation.getCurrentPosition(
-    p=>{
-      locationName.textContent=`Near you · ${p.coords.latitude.toFixed(3)}, ${p.coords.longitude.toFixed(3)}`;
-    },
-    ()=>{
-      locationName.textContent='Ampang · Nearby';
-    },
-    {enableHighAccuracy:true,timeout:6500,maximumAge:60000}
-  );
-};
-
-const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('.reel').forEach(r=>r.classList.remove('active'));e.target.classList.add('active')}}),{root:feed,threshold:.65});
-document.querySelectorAll('.reel').forEach(r=>observer.observe(r));
-
-let saved=new Set([1]);
+$('demoBtn').onclick=enter;$('locateBtn').onclick=useLocation;$('retryLocation').onclick=useLocation;
+$('useDemo').onclick=()=>{$('locationName').textContent='Ampang · Demo';$('areaDialog').close();};
+$('areaBtn').onclick=()=>$('areaDialog').showModal();
+const observer = new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('.reel').forEach(r=>r.classList.remove('active'));e.target.classList.add('active');activeId=e.target.dataset.id;}}),{root:$('feed'),threshold:.65});
+function actionButtons(f){return `<div class="action-stack"><div><button class="action" data-action="reviews" data-id="${f.id}" aria-label="Reviews for ${esc(f.dish)}">${svg.reviews}</button><div class="action-label">Reviews</div></div><div><button class="action save ${saved.has(f.id)?'is-saved':''}" data-action="save" data-id="${f.id}" aria-label="Save ${esc(f.dish)}" aria-pressed="${saved.has(f.id)}">${svg.save}</button><div class="action-label">Save</div></div><div><button class="action" data-action="go" data-id="${f.id}" aria-label="Directions for ${esc(f.dish)}">${svg.dir}</button><div class="action-label">Go</div></div></div>`;}
+function renderFeed(){
+  observer.disconnect();const items=filtered();
+  $('feed').innerHTML=items.length?items.map((f,i)=>`<article class="reel ${i===0?'active':''}" data-id="${f.id}" aria-label="${esc(f.dish)} at ${esc(f.restaurant)}"><div class="reel-bg" style="background-image:url('${f.img}')" role="img" aria-label="${esc(f.dish)} stock photo"></div><div class="source-tag">${f.source==='Google'?'Google review':f.source+' post'} · Sample</div><div class="reel-content"><div class="meta"><div class="distance">${distance(f)} away · ${f.open?'Open now':'Closed'}</div><button class="dish-button" data-action="details" data-id="${f.id}" aria-label="About ${esc(f.dish)}"><h2 class="dish">${f.dish}</h2></button><p class="restaurant">${f.restaurant}</p><div class="rating-line"><button class="rating-button" data-action="reviews" data-id="${f.id}" data-source="Google" aria-label="Google reviews for ${esc(f.dish)}"><span class="star">★</span> ${f.rating} <span class="tiny-sep">(${f.count})</span></button><span class="tiny-sep">·</span><span>RM${f.price}</span></div><div class="source-links">${['Google','Instagram','TikTok'].map(source=>`<button class="source-link" data-action="reviews" data-id="${f.id}" data-source="${source}" aria-label="${source} reviews for ${esc(f.dish)}">${source}</button>`).join('')}</div></div>${actionButtons(f)}</div>${i===0&&items.length>1?`<div class="swipe-hint">Scroll for more ${svg.down}</div>`:''}</article>`).join(''):'<div class="empty-state"><h2>No bites found</h2><p>Try a wider distance or change your filters.</p><button class="primary" data-action="reset">Reset filters</button></div>';
+  $('feed').scrollTop=0;activeId=items[0]?.id||null;document.querySelectorAll('.reel').forEach(r=>observer.observe(r));
+}
 function renderSaved(){
-  const grid=document.getElementById('savedGrid'); const items=[...saved].map(i=>FOOD[i]);
-  grid.innerHTML=items.length?items.map(f=>`<div class="saved-card"><img src="${f.img}" alt="${f.dish}"><div><b>${f.dish}</b><span>${f.restaurant} · ${f.distance}</span></div></div>`).join(''):`<div style="grid-column:1/-1;color:rgba(255,255,255,.5);padding:40px 4px">Nothing saved yet.</div>`;
+  const allSaved=FOOD.filter(f=>saved.has(f.id));
+  // Saved is a persistent collection, independent of Discover filters.
+  $('savedGrid').innerHTML=allSaved.length?allSaved.map(f=>`<button class="saved-card" data-action="details" data-id="${f.id}" aria-label="About saved ${esc(f.dish)}"><img src="${f.img}" alt="${esc(f.dish)} stock photo" loading="lazy"><div><b>${f.dish}</b><span>${f.restaurant} · RM${f.price}<br>${distance(f)} · ★ ${f.rating}</span></div></button>`).join(''):'<div class="saved-empty">Nothing saved yet.<br>Tap Save on a food you want to try.<br><button class="secondary" data-action="discover">Explore food</button></div>';
 }
-document.querySelectorAll('.save').forEach(b=>b.onclick=()=>{const i=+b.dataset.i; saved.has(i)?saved.delete(i):saved.add(i); b.style.background=saved.has(i)?'rgba(255,255,255,.24)':'rgba(16,16,18,.42)'; renderSaved();});
-renderSaved();
-
-const mapScreen=document.getElementById('mapScreen'), savedScreen=document.getElementById('savedScreen');
-function showMapCard(i){const f=FOOD[i]; document.getElementById('mapCard').innerHTML=`<img src="${f.img}" alt="${f.dish}"><div><h3>${f.dish}</h3><p>${f.restaurant}<br>${f.distance} away</p></div><button class="mini-cta">${svg.dir}</button>`;}
-showMapCard(0);document.querySelectorAll('.pin').forEach(p=>p.onclick=()=>showMapCard(+p.dataset.i));
-
-document.querySelectorAll('.nav-btn').forEach(btn=>btn.onclick=()=>{
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
-  mapScreen.classList.toggle('show',btn.dataset.view==='map'); savedScreen.classList.toggle('show',btn.dataset.view==='saved');
+function saveFood(id){
+  saved.has(id)?saved.delete(id):saved.add(id);
+  try{localStorage.setItem('nearby.saved.v1',JSON.stringify([...saved]));}catch{notify('Saved for this visit. Browser storage is unavailable.');}
+  document.querySelectorAll(`[data-action="save"][data-id="${id}"]`).forEach(b=>{b.classList.toggle('is-saved',saved.has(id));b.setAttribute('aria-pressed',String(saved.has(id)));if(b.classList.contains('detail-save'))b.textContent=saved.has(id)?'Saved':'Save place';});
+  renderSaved();
+}
+const pinPositions=[[16,24],[72,34],[30,51],[68,63],[46,27],[12,65]];
+function renderMap(){
+  const items=filtered();if(!items.some(f=>f.id===mapId))mapId=items[0]?.id||null;
+  $('mapPins').innerHTML=items.map(f=>{const i=FOOD.indexOf(f),pos=pinPositions[i];return `<button class="pin ${f.id===mapId?'selected':''}" style="left:${pos[0]}%;top:${pos[1]}%" data-action="pin" data-id="${f.id}" aria-label="Show ${esc(f.dish)} on demo map" aria-pressed="${f.id===mapId}"><img alt="" src="${f.img}" /><span class="map-pin-label">RM${f.price}</span></button>`;}).join('');
+  const f=getFood(mapId);$('mapCard').style.display=f?'flex':'none';
+  $('mapCard').innerHTML=f?`<img src="${f.img}" alt="${esc(f.dish)} stock photo"><div><h3>${f.dish}</h3><p>${f.restaurant}<br>${distance(f)} · ★ ${f.rating}</p></div><button class="mini-cta" data-action="details" data-id="${f.id}" aria-label="Details for ${esc(f.dish)}">${svg.reviews}</button>`:'';
+  let empty=$('mapEmpty');if(!empty){empty=document.createElement('div');empty.id='mapEmpty';empty.className='map-empty';$('mapScreen').append(empty);}empty.innerHTML=items.length?'':'No food matches these filters. <button class="secondary" data-action="reset">Reset filters</button>';
+}
+function setView(view){currentView=view;document.querySelectorAll('.nav-btn').forEach(b=>{const selected=b.dataset.view===view;b.classList.toggle('active',selected);selected?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current');});
+  ['map','saved'].forEach(v=>{const el=$(v+'Screen');el.classList.toggle('show',view===v);el.inert=view!==v;});$('feed').inert=view!=='discover';document.querySelector('.filter-bar').hidden=view==='saved';
+}
+function refresh(){renderFeed();renderMap();}
+function syncFilters(){document.querySelectorAll('[data-category]').forEach(b=>{const on=b.dataset.category===category;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});[['openBtn',onlyOpen],['budgetBtn',budget]].forEach(([id,on])=>{$(id).classList.toggle('active',on);$(id).setAttribute('aria-pressed',String(on));});$('rangeText').textContent=range===500?'500 m':`${range/1000} km`;document.querySelectorAll('[data-range]').forEach(b=>{const on=Number(b.dataset.range)===range;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});$('searchBtn').classList.toggle('active',!!query);$('searchBtn').setAttribute('aria-label',query?`Search food: ${query}`:'Search food');}
+function resetFilters(){range=1000;category='all';query='';onlyOpen=false;budget=false;$('searchInput').value='';syncFilters();refresh();}
+document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>setView(b.dataset.view));
+document.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>{category=b.dataset.category;syncFilters();refresh();});
+$('openBtn').onclick=()=>{onlyOpen=!onlyOpen;syncFilters();refresh();};$('budgetBtn').onclick=()=>{budget=!budget;syncFilters();refresh();};
+$('rangeBtn').onclick=()=>$('rangeDialog').showModal();
+document.querySelectorAll('[data-range]').forEach(b=>b.onclick=()=>{range=Number(b.dataset.range);syncFilters();refresh();$('rangeDialog').close();});
+$('searchBtn').onclick=()=>{$('searchInput').value=query;$('searchDialog').showModal();$('searchInput').focus();};
+$('searchForm').onsubmit=e=>{e.preventDefault();query=$('searchInput').value.trim();syncFilters();refresh();setView('discover');$('searchDialog').close();notify(query?`Searching for “${query}”`:'Showing all food');};
+$('clearSearch').onclick=()=>{query='';$('searchInput').value='';syncFilters();refresh();$('searchDialog').close();};
+function reviewsFor(f){return [{source:'Google',author:'Alex L.',date:'2 days ago',rating:5,text:f.google[0]},{source:'Google',author:'Jamie T.',date:'1 week ago',rating:4,text:f.google[1]},{source:'Instagram',author:'@weekend.bites.demo',date:'3 days ago',text:f.social},{source:'TikTok',author:'@firstbite.demo',date:'5 days ago',text:f.tiktok}];}
+function reviewCards(f){const items=reviewsFor(f).filter(r=>reviewSource==='All'||r.source===reviewSource);return items.map(r=>`<article class="review-card"><div class="review-head"><span class="review-avatar" aria-hidden="true">${r.author.replace('@','').slice(0,1)}</span><div class="review-by">${r.author}<small>${r.date} · Sample</small></div><span class="review-source">${r.source}</span></div>${r.rating?`<div class="review-stars" aria-label="${r.rating} out of 5 stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>`:'<span class="demo-label">'+(r.source==='Instagram'?'Post preview':'Video preview')+'</span>'}<p>${r.text}</p>${r.source!=='Google'?'<div class="review-foot">Sample '+(r.source==='Instagram'?'post':'video description')+' · no live media connected</div>':''}</article>`).join('');}
+function renderDetail(id,source='All'){
+  detailId=id;reviewSource=source;const f=getFood(id);
+  $('detailBody').innerHTML=`<div class="dialog-top"><div class="grab"></div><button class="close-btn" data-close aria-label="Close place details">×</button></div><img class="detail-photo" src="${f.img}" alt="${f.dish} stock photo"><h2 id="detailTitle">${f.dish}</h2><p class="muted">${f.restaurant} · Ampang · Demo place</p><p class="muted">${f.description}</p><div class="detail-meta"><span>★ ${f.rating} · ${f.count} sample ratings</span><span>RM${f.price}</span><span>${distance(f)}</span><span>${f.open?'Open now':'Closed'} · ${f.hours}</span></div><div class="detail-actions"><button class="primary outline detail-save" data-action="save" data-id="${f.id}" aria-pressed="${saved.has(f.id)}">${saved.has(f.id)?'Saved':'Save place'}</button><button class="primary" data-action="go" data-id="${f.id}">Directions</button></div><h3>Reviews & posts</h3><div class="review-tabs" aria-label="Review source">${['All','Google','Instagram','TikTok'].map(s=>`<button class="review-tab ${s===source?'active':''}" data-review-source="${s}" aria-pressed="${s===source}">${s}</button>`).join('')}</div><div id="reviewList">${reviewCards(f)}</div><p class="reviews-note">All places, reviews, ratings, hours, and distances here are sample data. Photos are illustrative. Live Google reviews and social posts are not connected.</p>`;
+  $('detailDialog').scrollTop=0;if(!$('detailDialog').open)$('detailDialog').showModal();
+}
+function routePreview(id){const f=getFood(id);detailId=id;const minutes=Math.max(1,Math.round(f.meters/80));
+  $('detailBody').innerHTML=`<div class="dialog-top"><div class="grab"></div><button class="close-btn" data-close aria-label="Close directions">×</button></div><h2 id="detailTitle">Getting there</h2><p class="muted">${f.restaurant} · Ampang · Demo place</p><div class="route-preview"><span class="demo-label">Sample walking estimate</span><strong>${minutes} min</strong><p class="muted">${distance(f)} from the demo starting point</p></div><p class="muted">This place and route are fictional. You can search Google Maps for real ${f.dish.toLowerCase()} nearby.</p><a class="primary external-link" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(f.dish+' Ampang Malaysia')}" target="_blank" rel="noopener noreferrer">Find this food on Google Maps</a><button class="secondary" data-action="details" data-id="${f.id}">Back to place</button>`;
+  $('detailDialog').scrollTop=0;if(!$('detailDialog').open)$('detailDialog').showModal();
+}
+document.addEventListener('click',e=>{
+  const close=e.target.closest('[data-close]');if(close){close.closest('dialog').close();return;}
+  const tab=e.target.closest('[data-review-source]');if(tab){reviewSource=tab.dataset.reviewSource;document.querySelectorAll('[data-review-source]').forEach(b=>{const on=b===tab;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});$('reviewList').innerHTML=reviewCards(getFood(detailId));return;}
+  const b=e.target.closest('[data-action]');if(!b)return;const {action,id,source}=b.dataset;
+  if(action==='save')saveFood(id);if(action==='details'||action==='reviews')renderDetail(id,source||'All');if(action==='go')routePreview(id);if(action==='pin'){mapId=id;renderMap();}if(action==='reset')resetFilters();if(action==='discover')setView('discover');
 });
+document.querySelectorAll('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}}));
+$('feed').addEventListener('keydown',e=>{if(['ArrowDown','ArrowUp'].includes(e.key)){e.preventDefault();$('feed').scrollBy({top:(e.key==='ArrowDown'?1:-1)*$('feed').clientHeight,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}});
+renderFeed();renderSaved();renderMap();syncFilters();setView('discover');
 
-const backdrop=document.getElementById('sheetBackdrop');document.getElementById('rangeBtn').onclick=()=>backdrop.classList.add('show');
-backdrop.onclick=e=>{if(e.target===backdrop)backdrop.classList.remove('show')};
-document.querySelectorAll('.range-option').forEach(o=>o.onclick=()=>{document.querySelectorAll('.range-option').forEach(x=>x.classList.remove('active'));o.classList.add('active');document.getElementById('rangeText').textContent=o.dataset.range;backdrop.classList.remove('show')});
 </script>
 </body>
 </html>
