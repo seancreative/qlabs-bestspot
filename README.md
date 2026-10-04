@@ -1,6 +1,6 @@
 # NEARBY web prototype
 
-A mobile-first food discovery prototype, based on the supplied dark glass interface.
+A mobile-first food discovery prototype, with a minimal, monochrome interface.
 
 ## Run locally
 
@@ -9,7 +9,7 @@ From this folder, run `python3 -m http.server 4173 --bind 127.0.0.1`, then open 
 ## Working flows
 
 - Full-screen scrolling and keyboard navigation through food photos.
-- Search food and restaurant names; filter distance, meals/sweets, open status, and budget.
+- Search food and restaurant names; a single filter sheet handles distance, meals/sweets, open status, and budget.
 - Separate Google, Instagram, and TikTok sample review tabs.
 - Place details with sample price, rating, distance, and hours.
 - Save/unsave places with localStorage persistence and an independent Saved collection.
