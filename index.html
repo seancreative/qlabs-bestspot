@@ -7,240 +7,163 @@
   <title>NEARBY — Social Food Discovery</title>
   <meta name="description" content="A web prototype for scrolling nearby food and exploring Google, Instagram, and TikTok reviews." />
   <style>
-    :root{
-      --bg:#09090b;
-      --glass:rgba(22,22,26,.52);
-      --glass-2:rgba(255,255,255,.08);
-      --stroke:rgba(255,255,255,.14);
-      --text:#fff;
-      --muted:rgba(255,255,255,.62);
-      --shadow:0 24px 80px rgba(0,0,0,.45);
-      --radius:28px;
-      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;background:var(--bg);color:var(--text);height:100%;overflow:hidden}
-    button,input{font:inherit}
-    button{color:inherit}
-    .app{height:100svh;position:relative;overflow:hidden;background:
-      radial-gradient(circle at 12% 12%,rgba(255,150,65,.16),transparent 28%),
-      radial-gradient(circle at 90% 16%,rgba(219,75,126,.12),transparent 24%),
-      linear-gradient(180deg,#141416 0%,#08080a 58%,#050506 100%)}
-
-    .noise{position:absolute;inset:0;pointer-events:none;opacity:.22;mix-blend-mode:soft-light;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.12'/%3E%3C/svg%3E")}
-    .blur-orb{position:absolute;border-radius:999px;filter:blur(70px);opacity:.28;pointer-events:none;transition:all .8s ease}
-    .orb-a{width:42vw;height:42vw;left:-8vw;top:-7vw;background:#ff8733}
-    .orb-b{width:40vw;height:40vw;right:-12vw;top:28vh;background:#c5347b}
-
-    .glass{background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.045));backdrop-filter:blur(26px) saturate(140%);-webkit-backdrop-filter:blur(26px) saturate(140%);border:1px solid var(--stroke);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),var(--shadow)}
-
-    /* LANDING */
-    .landing{position:absolute;inset:0;z-index:10;display:grid;place-items:center;padding:28px;transition:opacity .55s ease,transform .55s cubic-bezier(.2,.9,.2,1)}
-    .landing.hide{opacity:0;transform:scale(1.04);pointer-events:none}
-    .hero-card{width:min(92vw,460px);padding:34px 28px 26px;border-radius:36px;text-align:center;position:relative;overflow:hidden}
-    .hero-card:after{content:"";position:absolute;inset:-35% -10% auto;height:48%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);transform:rotate(-8deg);filter:blur(8px);pointer-events:none}
-    .mark{width:58px;height:58px;border-radius:19px;margin:2px auto 30px;display:grid;place-items:center;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.18);box-shadow:0 12px 38px rgba(0,0,0,.25)}
-    .mark svg{width:26px;height:26px}
-    .eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.52);margin-bottom:12px}
-    h1{margin:0;font-size:clamp(42px,9vw,62px);line-height:.92;letter-spacing:-.065em;font-weight:750}
-    .hero-card p{margin:18px auto 30px;color:var(--muted);font-size:15px;line-height:1.55;max-width:310px}
-    .primary{width:100%;border:0;border-radius:18px;padding:16px 18px;background:#fff;color:#111;font-weight:700;display:flex;gap:10px;align-items:center;justify-content:center;cursor:pointer;transition:transform .18s ease,background .18s ease}
-    .primary:active{transform:scale(.985)}
-    .primary svg{width:18px;height:18px}
-    .secondary{border:0;background:transparent;color:rgba(255,255,255,.64);font-size:13px;margin-top:14px;cursor:pointer;padding:8px}
-
-    /* HOME */
-    .home{position:absolute;inset:0;opacity:0;pointer-events:none;transform:translateY(16px);transition:opacity .55s ease .15s,transform .55s ease .15s;z-index:5}
-    .home.show{opacity:1;pointer-events:auto;transform:none}
-    .topbar{position:absolute;z-index:30;left:0;right:0;top:0;padding:max(16px,env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:10px;pointer-events:none}
-    .location-pill,.range-pill,.icon-btn{pointer-events:auto;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,.13);background:rgba(17,17,20,.46);backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%);box-shadow:0 10px 26px rgba(0,0,0,.24);display:flex;align-items:center}
-    .location-pill{padding:0 14px;gap:8px;font-weight:650;font-size:13px;max-width:55vw}
-    .location-pill .dot{width:7px;height:7px;border-radius:999px;background:#7cff80;box-shadow:0 0 14px rgba(124,255,128,.75)}
-    .location-pill span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .range-pill{margin-left:auto;padding:0 13px;font-size:12px;color:rgba(255,255,255,.78);cursor:pointer}
-    .icon-btn{width:44px;justify-content:center;cursor:pointer}
-    .icon-btn svg{width:18px;height:18px}
-
-    .feed{height:100%;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none}
-    .feed::-webkit-scrollbar{display:none}
-    .reel{height:100svh;scroll-snap-align:start;position:relative;overflow:hidden;background:#111}
-    .reel-bg{position:absolute;inset:-2%;background-size:cover;background-position:center;transform:scale(1.03);transition:transform 6s ease}
-    .reel.active .reel-bg{transform:scale(1.1)}
-    .reel:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.34) 0%,rgba(0,0,0,.06) 26%,rgba(0,0,0,.06) 52%,rgba(0,0,0,.78) 91%,#08080a 100%)}
-    .reel:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.14),transparent 40%,rgba(0,0,0,.06));z-index:1}
-    .reel-content{position:absolute;z-index:4;left:18px;right:18px;bottom:calc(92px + env(safe-area-inset-bottom));display:flex;gap:14px;align-items:end}
-    .meta{flex:1;min-width:0}
-    .distance{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:650;padding:8px 11px;border-radius:999px;background:rgba(14,14,16,.42);border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);margin-bottom:10px}
-    .distance i{display:block;width:6px;height:6px;border-radius:50%;background:#78ff92}
-    .dish{font-size:30px;line-height:1.02;letter-spacing:-.04em;font-weight:730;margin:0 0 7px;text-shadow:0 2px 22px rgba(0,0,0,.35)}
-    .restaurant{font-size:14px;font-weight:650;margin:0 0 5px;color:rgba(255,255,255,.93)}
-    .creator{font-size:12px;color:rgba(255,255,255,.62)}
-    .action-stack{display:grid;gap:11px}
-    .action{width:46px;height:46px;border-radius:16px;border:1px solid rgba(255,255,255,.15);background:rgba(16,16,18,.42);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:grid;place-items:center;cursor:pointer}
-    .action svg{width:20px;height:20px}
-    .action-label{font-size:9px;text-align:center;color:rgba(255,255,255,.6);margin-top:-5px}
-    .source-tag{position:absolute;z-index:5;right:18px;top:92px;font-size:10px;letter-spacing:.11em;text-transform:uppercase;padding:7px 9px;border-radius:999px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(12px)}
-    .swipe-hint{position:absolute;z-index:4;bottom:calc(78px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);opacity:.5;font-size:10px;letter-spacing:.16em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:5px;animation:float 1.6s ease-in-out infinite}
-    .swipe-hint svg{width:15px;height:15px}
-    @keyframes float{50%{transform:translate(-50%,-5px)}}
-
-    .bottom-nav{position:absolute;z-index:40;left:50%;transform:translateX(-50%);bottom:max(14px,env(safe-area-inset-bottom));height:62px;width:min(calc(100% - 28px),410px);border-radius:24px;display:grid;grid-template-columns:repeat(3,1fr);padding:6px;background:rgba(12,12,14,.62);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(28px) saturate(150%);-webkit-backdrop-filter:blur(28px) saturate(150%);box-shadow:0 14px 48px rgba(0,0,0,.42)}
-    .nav-btn{border:0;border-radius:18px;background:transparent;color:rgba(255,255,255,.52);display:flex;gap:6px;align-items:center;justify-content:center;font-weight:650;font-size:12px;cursor:pointer}
-    .nav-btn svg{width:18px;height:18px}
-    .nav-btn.active{color:#fff;background:rgba(255,255,255,.1);box-shadow:inset 0 1px rgba(255,255,255,.08)}
-
-    /* MAP */
-    .map-screen,.saved-screen{position:absolute;z-index:12;inset:0;background:#0b0b0d;opacity:0;pointer-events:none;transition:opacity .3s ease;padding-top:88px}
-    .map-screen.show,.saved-screen.show{opacity:1;pointer-events:auto}
-    .map-canvas{position:absolute;inset:0;background:
-      linear-gradient(30deg,rgba(255,255,255,.018) 12%,transparent 12.5%,transparent 87%,rgba(255,255,255,.018) 87.5%,rgba(255,255,255,.018)),
-      linear-gradient(150deg,rgba(255,255,255,.018) 12%,transparent 12.5%,transparent 87%,rgba(255,255,255,.018) 87.5%,rgba(255,255,255,.018)),
-      linear-gradient(30deg,rgba(255,255,255,.018) 12%,transparent 12.5%,transparent 87%,rgba(255,255,255,.018) 87.5%,rgba(255,255,255,.018));
-      background-size:62px 108px;background-position:0 0,0 0,31px 54px;background-color:#111216}
-    .road{position:absolute;background:rgba(255,255,255,.07);border-radius:999px;transform-origin:left center}
-    .road.r1{width:120%;height:16px;left:-10%;top:34%;transform:rotate(-12deg)}
-    .road.r2{width:110%;height:12px;left:-12%;top:58%;transform:rotate(18deg)}
-    .road.r3{width:86%;height:9px;left:14%;top:72%;transform:rotate(-4deg)}
-    .road.r4{width:12px;height:78%;left:57%;top:8%;transform:rotate(8deg)}
-    .map-overlay{position:absolute;inset:0;background:radial-gradient(circle at 50% 48%,transparent 0 30%,rgba(0,0,0,.2) 72%,rgba(0,0,0,.48) 100%)}
-    .pin{position:absolute;z-index:3;width:60px;height:60px;border-radius:22px;padding:3px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.23);backdrop-filter:blur(12px);box-shadow:0 12px 36px rgba(0,0,0,.35);cursor:pointer;transition:transform .2s ease}
-    .pin:hover{transform:scale(1.08)}
-    .pin img{width:100%;height:100%;object-fit:cover;border-radius:18px;display:block}
-    .pin:after{content:"";position:absolute;left:50%;bottom:-7px;width:13px;height:13px;background:rgba(255,255,255,.17);border-right:1px solid rgba(255,255,255,.22);border-bottom:1px solid rgba(255,255,255,.22);transform:translateX(-50%) rotate(45deg);backdrop-filter:blur(12px)}
-    .pin.p1{left:16%;top:24%}.pin.p2{right:17%;top:35%}.pin.p3{left:34%;top:54%}.pin.p4{right:27%;top:67%}
-    .me-dot{position:absolute;z-index:2;left:51%;top:46%;width:16px;height:16px;border-radius:50%;background:#69a7ff;border:3px solid #fff;box-shadow:0 0 0 12px rgba(105,167,255,.16),0 0 30px rgba(105,167,255,.45)}
-    .map-card{position:absolute;z-index:7;left:16px;right:16px;bottom:94px;border-radius:25px;padding:10px;display:flex;gap:12px;align-items:center;background:rgba(15,15,18,.63);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(24px);box-shadow:0 20px 55px rgba(0,0,0,.42)}
-    .map-card img{width:82px;height:82px;object-fit:cover;border-radius:18px}
-    .map-card h3{margin:0 0 5px;font-size:16px;letter-spacing:-.02em}.map-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.5}.mini-cta{margin-left:auto;width:42px;height:42px;border-radius:14px;border:0;background:#fff;color:#111;display:grid;place-items:center}.mini-cta svg{width:17px}
-
-    /* SAVED */
-    .saved-screen{padding:98px 18px 100px;overflow:auto;background:linear-gradient(180deg,#111216,#09090b)}
-    .saved-screen h2{font-size:32px;letter-spacing:-.05em;margin:8px 0 5px}.saved-screen>p{margin:0 0 22px;color:var(--muted);font-size:13px}
-    .saved-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-    .saved-card{aspect-ratio:.78;border-radius:24px;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,.1);background:#18181b}
-    .saved-card img{width:100%;height:100%;object-fit:cover}.saved-card:after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 45%,rgba(0,0,0,.82))}.saved-card div{position:absolute;z-index:2;left:13px;right:13px;bottom:13px}.saved-card b{display:block;font-size:15px}.saved-card span{font-size:11px;color:rgba(255,255,255,.65)}
-
-    /* RANGE SHEET */
-    .sheet-backdrop{position:absolute;z-index:70;inset:0;background:rgba(0,0,0,.38);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .2s}
-    .sheet-backdrop.show{opacity:1;pointer-events:auto}
-    .sheet{position:absolute;left:12px;right:12px;bottom:12px;border-radius:30px;padding:12px 16px calc(18px + env(safe-area-inset-bottom));background:rgba(21,21,24,.87);border:1px solid rgba(255,255,255,.13);box-shadow:0 22px 90px rgba(0,0,0,.58);transform:translateY(110%);transition:transform .35s cubic-bezier(.2,.9,.2,1)}
-    .sheet-backdrop.show .sheet{transform:none}.grab{width:42px;height:4px;border-radius:999px;background:rgba(255,255,255,.2);margin:2px auto 18px}.sheet h3{margin:0 0 14px;font-size:20px;letter-spacing:-.03em}.ranges{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.range-option{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);border-radius:16px;padding:13px 6px;font-size:12px;font-weight:650;cursor:pointer}.range-option.active{background:#fff;color:#111;border-color:#fff}
-
-    @media (min-width:800px){
-      .app{max-width:520px;margin:auto;border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06);box-shadow:0 0 80px rgba(0,0,0,.45)}
-      body{background:#050506}
-    }
-
-    /* Working prototype: preserve the original full-screen glass interface. */
-    .app,.reel{overflow:clip}
-    [inert]{pointer-events:none}
-    button,a,input{touch-action:manipulation}
-    button{cursor:pointer}
-    button:focus-visible,a:focus-visible,input:focus-visible,.feed:focus-visible{outline:2px solid #ffb77a;outline-offset:4px}
-    .home:not(.show){visibility:hidden}
-    .home.show{visibility:visible}
-    .landing.hide{visibility:hidden}
-    .demo-note{font-size:12px;color:var(--muted);margin-top:10px}
-    .location-pill{font-size:14px;max-width:calc(100% - 138px);flex-shrink:1}
-    .range-pill{font-size:14px;flex-shrink:0}
-    .icon-btn{flex-shrink:0}
-    .icon-btn.active{background:#fff;color:#111}
-    .filter-bar{position:absolute;z-index:31;left:0;right:0;top:calc(max(16px,env(safe-area-inset-top)) + 54px);display:flex;gap:7px;padding:0 16px 10px;overflow:auto;scrollbar-width:none}
-    .filter-bar::-webkit-scrollbar{display:none}
-    .filter-bar[hidden]{display:none}
-    .filter-chip{flex-shrink:0;border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:9px 13px;font-size:14px;color:#eee;background:rgba(15,15,18,.65);backdrop-filter:blur(18px)}
-    .filter-chip.active{background:#fff;border-color:#fff;color:#111}
-    .reel-bg{background-color:#292326}
-    .reel:after{background:linear-gradient(180deg,rgba(0,0,0,.5),rgba(0,0,0,.03) 34%,rgba(0,0,0,.2) 52%,rgba(0,0,0,.86) 88%,#08080a 100%)}
-    .source-tag{top:calc(max(16px,env(safe-area-inset-top)) + 110px);font-size:12px;letter-spacing:.02em;text-transform:none;color:#fff;background:rgba(0,0,0,.55)}
-    .reel-content{bottom:calc(112px + env(safe-area-inset-bottom));gap:10px}
-    .distance{font-size:14px;gap:0;margin-bottom:12px}
-    .dish-button{border:0;padding:0;background:none;text-align:left;color:inherit}
-    .dish{font-size:32px;line-height:1.08;overflow-wrap:anywhere}
-    .creator{font-size:13px;margin:8px 0 0}
-    .rating-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:9px 0;font-size:14px;color:#fff}
-    .rating-button{border:0;padding:0;background:none;font-size:14px;font-weight:650}
-    .rating-button .star{color:#ffd88b}
-    .tiny-sep{color:rgba(255,255,255,.5)}
-    .source-links{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
-    .source-link{padding:7px 10px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.07);border-radius:10px;font-size:12px;min-height:34px}
-    .action-stack{gap:15px}.action-label{font-size:12px;margin-top:4px;color:#eee}.action{width:46px;height:46px;background:rgba(16,16,18,.65)}
-    .action.is-saved{color:#ffcf9f;border-color:#ffcf9f;background:rgba(255,153,76,.16)}
-    .action.is-saved svg{fill:currentColor}
-    .swipe-hint{bottom:calc(82px + env(safe-area-inset-bottom));font-size:12px;opacity:.65;letter-spacing:.03em;animation:none;flex-direction:row}
-    .nav-btn{font-size:14px}
-    .map-screen,.saved-screen{display:none}.map-screen.show,.saved-screen.show{display:block}
-    .map-label{position:absolute;top:132px;left:18px;color:#ccc;font-size:14px;z-index:3}
-    .map-card{bottom:calc(94px + env(safe-area-inset-bottom));align-items:center}
-    .map-card h3{font-size:16px}.map-card p{font-size:14px}.map-card img{width:64px;height:74px}.map-card .mini-cta{flex-shrink:0;cursor:pointer}
-    .pin{width:54px;height:54px}.pin.selected{border:2px solid #ffbf84;background:#ffbf84}.pin img{border-radius:17px}
-    .map-pin-label{position:absolute;left:50%;transform:translateX(-50%);top:56px;border-radius:8px;white-space:nowrap;background:#151518;padding:4px 7px;font-size:12px;color:#eee}
-    .map-empty{position:absolute;top:42%;left:22px;right:22px;text-align:center;color:#eee}
-    .saved-screen{padding-top:132px}.saved-screen>p{font-size:14px}
-    .saved-card{width:100%;padding:0;color:#fff;text-align:left;cursor:pointer;min-width:0}
-    .saved-card span{font-size:12px}.saved-card b{overflow-wrap:anywhere}
-    .empty-state{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:160px 26px 120px;background:linear-gradient(140deg,#242026,#09090b)}
-    .empty-state h2{font-size:28px;margin:0 0 12px;letter-spacing:-.03em}.empty-state p{font-size:16px;line-height:1.5;color:var(--muted);margin:0 0 22px;max-width:270px}.empty-state button{width:auto;min-width:160px}
-    .saved-empty{grid-column:1/-1;padding:40px 0;color:var(--muted);font-size:16px;line-height:1.6}
-    .sheet-dialog{position:fixed;inset:auto 0 0;margin:0 auto;width:min(calc(100% - 24px),496px);max-height:calc(100svh - 36px);border-radius:30px 30px 0 0;padding:14px 20px calc(24px + env(safe-area-inset-bottom));color:#fff;border:1px solid rgba(255,255,255,.17);background:rgba(21,21,24,.97);box-shadow:0 -20px 90px rgba(0,0,0,.5);overflow-y:auto;overscroll-behavior:contain}
-    .sheet-dialog::backdrop{background:rgba(0,0,0,.58);backdrop-filter:blur(5px)}
-    .sheet-dialog h2{font-size:24px;line-height:1.2;letter-spacing:-.03em;margin:10px 0 12px}.sheet-dialog h3{font-size:18px;line-height:1.3}
-    .dialog-top{position:relative;min-height:30px}.dialog-top .grab{margin:0 auto}.close-btn{position:absolute;right:-6px;top:-5px;display:grid;place-items:center;width:40px;height:40px;background:rgba(255,255,255,.08);border:1px solid var(--stroke);border-radius:50%;font-size:25px;line-height:1}
-    .muted{font-size:14px;line-height:1.6;color:var(--muted);margin:0 0 18px}
-    .sheet-dialog .range-option{font-size:14px;min-height:48px}.sheet-dialog .secondary{font-size:14px;min-height:44px}
-    #searchInput{width:100%;padding:15px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid var(--stroke);color:#fff;font-size:16px;margin:5px 0 14px}
-    .detail-photo{width:100%;height:150px;object-fit:cover;border-radius:20px;margin-top:8px}
-    .detail-meta{display:flex;gap:8px;flex-wrap:wrap;font-size:14px;color:#ddd;margin:12px 0 18px}
-    .detail-meta span{background:rgba(255,255,255,.06);padding:7px 10px;border-radius:10px}
-    .detail-actions{display:flex;gap:8px;margin:0 0 20px}.detail-actions button{width:auto;flex:1;font-size:14px;padding:13px 8px}.detail-actions .outline{border:1px solid var(--stroke);background:transparent;color:#fff}
-    .review-tabs{display:flex;gap:6px;overflow:auto;padding-bottom:12px}.review-tab{font-size:14px;padding:10px 12px;white-space:nowrap;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--stroke)}.review-tab.active{background:#fff;color:#111}
-    .review-card{border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:15px;margin:0 0 10px;background:rgba(255,255,255,.035)}
-    .review-head{display:flex;gap:10px;align-items:center;margin-bottom:10px}.review-avatar{width:34px;height:34px;display:grid;place-items:center;background:rgba(255,183,122,.12);color:#ffc997;border-radius:50%;font-size:14px}.review-by{flex:1;font-size:14px}.review-by small{display:block;font-size:12px;color:var(--muted);margin-top:3px}.review-source{font-size:12px;color:#ddd}.review-card p{font-size:16px;line-height:1.55;margin:6px 0}.review-foot{font-size:12px;color:var(--muted);margin-top:12px}.review-stars{color:#ffd88b;letter-spacing:2px;font-size:14px}
-    .demo-label{display:inline-block;margin-bottom:10px;color:#ffceaa;font-size:12px}.reviews-note{font-size:12px;color:var(--muted);line-height:1.5;margin:14px 0 0}
-    .route-preview{padding:20px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid var(--stroke);margin:16px 0}.route-preview strong{font-size:30px;display:block;margin:6px 0}.external-link{display:block;text-decoration:none;text-align:center;margin-top:18px;font-size:14px}
-    .toast{position:absolute;z-index:100;left:50%;bottom:calc(95px + env(safe-area-inset-bottom));transform:translate(-50%,10px);width:max-content;max-width:calc(100% - 40px);padding:12px 16px;border:1px solid rgba(255,255,255,.2);border-radius:16px;background:#242427;color:#fff;font-size:14px;box-shadow:0 12px 40px #0006;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;text-align:center}.toast.show{opacity:1;transform:translate(-50%,0)}
-    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-    @media(max-height:690px){.dish{font-size:26px}.action-stack{gap:9px}.reel-content{bottom:calc(98px + env(safe-area-inset-bottom))}.source-links{margin-top:8px}.swipe-hint{display:none}.creator{margin-top:4px}.detail-photo{height:100px}.hero-card{padding:24px}.mark{margin-bottom:20px}.hero-card p{margin:14px auto 20px}}
-    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.reel-bg,.reel.active .reel-bg{transform:none}}
-
+:root{--bg:#101010;--text:#f5f5f5;--muted:#a0a0a0;--stroke:#303030;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:#080808;color:var(--text);overflow:hidden}
+button,input,a{font:inherit;touch-action:manipulation}
+button{color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,.feed:focus-visible{outline:2px solid #fff;outline-offset:4px}
+button[hidden],[hidden]{display:none!important}
+.app{height:100svh;position:relative;overflow:clip;background:var(--bg)}
+[inert]{pointer-events:none}
+.primary{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:48px;padding:13px 18px;border:0;border-radius:6px;background:#f5f5f5;color:#111;font-size:15px;font-weight:550;text-decoration:none}
+.primary svg{width:18px;height:18px}
+.secondary{min-height:44px;padding:10px 0;border:0;background:none;color:var(--muted);font-size:14px}
+.muted{margin:0 0 20px;color:var(--muted);font-size:14px;line-height:1.6}
+.landing{position:absolute;inset:0;z-index:10;display:flex;align-items:center;padding:32px;background:var(--bg)}
+.landing.hide{display:none}
+.hero-card{width:100%;max-width:350px;margin:auto}
+.eyebrow{margin-bottom:24px;font-size:14px;font-weight:500}
+h1{margin:0;font-size:46px;font-weight:550;line-height:1.06;letter-spacing:-.045em}
+.hero-card p{margin:20px 0 40px;font-size:16px;line-height:1.6;color:var(--muted);max-width:260px}
+.hero-card .secondary{display:block;width:100%;margin-top:8px;text-align:center}
+.demo-note{margin-top:32px;color:var(--muted);font-size:12px}
+.home{position:absolute;inset:0;z-index:5;visibility:hidden}
+.home.show{visibility:visible}
+.topbar{position:absolute;z-index:30;left:0;right:0;top:0;height:calc(72px + env(safe-area-inset-top));padding:calc(12px + env(safe-area-inset-top)) 24px 12px;display:flex;align-items:center;gap:12px;background:linear-gradient(#0008,transparent);pointer-events:none}
+.location-pill,.range-pill,.icon-btn{pointer-events:auto;display:flex;align-items:center;min-height:44px;padding:0;border:0;background:none;border-radius:0;box-shadow:none}
+.location-pill{min-width:0;margin-right:auto;font-size:14px;font-weight:500}
+.location-pill span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.range-pill{flex-shrink:0;gap:7px;font-size:14px;color:#eee}
+.range-pill svg{width:17px;height:17px}
+.icon-btn{flex-shrink:0;width:32px;justify-content:flex-end;position:relative}
+.icon-btn svg{width:20px;height:20px}
+.icon-btn.active:after{content:"";position:absolute;width:4px;height:4px;border-radius:50%;right:0;bottom:4px;background:#fff}
+.feed{height:100%;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none}
+.feed::-webkit-scrollbar{display:none}
+.reel{height:100svh;position:relative;overflow:clip;scroll-snap-align:start;background:#161616}
+.reel-bg{position:absolute;inset:0;background-position:center;background-size:cover}
+.reel:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#0004,transparent 18%,transparent 42%,#0009 68%,#101010 91%);pointer-events:none}
+.reel-content{position:absolute;z-index:4;left:24px;right:24px;bottom:calc(96px + env(safe-area-inset-bottom))}
+.dish-button{display:block;text-align:left;padding:0;border:0;background:none}
+.dish{max-width:360px;margin:0 0 10px;font-size:30px;font-weight:550;line-height:1.12;letter-spacing:-.035em;overflow-wrap:anywhere}
+.restaurant{margin:0;font-size:15px;line-height:1.4;color:#ddd}
+.rating-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0 0;font-size:14px;color:#ccc}
+.rating-button{padding:0;border:0;background:none;font-size:14px;color:#eee;min-height:30px}
+.tiny-sep{color:#888}
+.action-stack{display:flex;gap:12px;align-items:center;margin-top:20px}
+.action{display:flex;align-items:center;justify-content:center;gap:8px;width:44px;height:44px;padding:0;border:0;background:none;border-radius:4px}
+.action svg{width:21px;height:21px}
+.review-action{width:auto;margin-right:auto;font-size:14px}
+.review-action svg{width:18px;height:18px}
+.action.is-saved svg{fill:currentColor}
+.bottom-nav{position:absolute;z-index:40;left:0;right:0;bottom:0;height:calc(68px + env(safe-area-inset-bottom));padding:0 24px env(safe-area-inset-bottom);display:flex;justify-content:space-between;align-items:center;background:#101010;border-top:1px solid #ffffff0d}
+.nav-btn{position:relative;min-height:52px;padding:0;border:0;background:none;color:#888;font-size:14px;font-weight:450}
+.nav-btn.active{color:#fff}
+.nav-btn.active:after{content:"";position:absolute;bottom:5px;left:0;right:0;height:1px;background:#fff}
+.nav-btn svg{display:none}
+.map-screen,.saved-screen{display:none;position:absolute;inset:0;z-index:12;background:var(--bg);overflow:clip}
+.map-screen.show,.saved-screen.show{display:block}
+.map-canvas{position:absolute;inset:0;background:#181818}
+.road{position:absolute;background:#242424;transform-origin:left center}
+.road.r1{width:120%;height:12px;left:-10%;top:34%;transform:rotate(-12deg)}
+.road.r2{width:110%;height:8px;left:-12%;top:58%;transform:rotate(18deg)}
+.road.r3{width:86%;height:6px;left:14%;top:72%;transform:rotate(-4deg)}
+.road.r4{width:8px;height:78%;left:57%;top:8%;transform:rotate(8deg)}
+.map-label{position:absolute;z-index:2;top:94px;left:24px;color:var(--muted);font-size:12px}
+.me-dot{position:absolute;left:51%;top:46%;width:10px;height:10px;border:2px solid #fff;border-radius:50%;background:#999}
+.pin{position:absolute;z-index:3;width:48px;height:48px;padding:2px;background:#202020;border:1px solid #555;border-radius:50%}
+.pin.selected{border:2px solid #fff}
+.pin img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover}
+.map-pin-label{position:absolute;top:52px;left:50%;transform:translateX(-50%);font-size:12px;white-space:nowrap;color:#ddd}
+.map-card{position:absolute;z-index:7;bottom:calc(88px + env(safe-area-inset-bottom));left:24px;right:24px;display:flex;align-items:center;gap:12px;padding:16px;background:#101010;border-radius:6px}
+.map-card img{width:54px;height:64px;object-fit:cover;border-radius:3px}
+.map-card h3{margin:0 0 6px;font-size:16px;font-weight:500;line-height:1.3}
+.map-card p{margin:0;font-size:13px;line-height:1.6;color:var(--muted)}
+.mini-cta{display:grid;place-items:center;flex-shrink:0;width:36px;height:44px;margin-left:auto;background:none;border:0}
+.mini-cta svg{width:20px;height:20px}
+.map-empty{position:absolute;left:24px;right:24px;top:42%;text-align:center;color:var(--muted);font-size:15px}
+.saved-screen{padding:100px 24px calc(100px + env(safe-area-inset-bottom));overflow-y:auto}
+.saved-screen h2{margin:0 0 26px;font-size:28px;font-weight:500;letter-spacing:-.03em}
+.saved-grid{display:flex;flex-direction:column}
+.saved-card{display:flex;align-items:center;width:100%;gap:16px;padding:20px 0;color:inherit;text-align:left;background:none;border:0;border-bottom:1px solid #282828}
+.saved-card img{width:80px;height:92px;flex-shrink:0;object-fit:cover;border-radius:3px}
+.saved-card b{display:block;margin-bottom:8px;font-size:16px;line-height:1.4;font-weight:500}
+.saved-card span{font-size:13px;line-height:1.7;color:var(--muted)}
+.saved-empty{font-size:16px;line-height:1.7;color:var(--muted)}
+.empty-state{height:100%;display:flex;flex-direction:column;justify-content:center;padding:120px 32px;background:var(--bg)}
+.empty-state h2{font-size:28px;font-weight:500;letter-spacing:-.03em;margin:0 0 14px}
+.empty-state p{font-size:16px;line-height:1.6;color:var(--muted);margin:0 0 26px}
+.empty-state .primary{width:auto;align-self:flex-start}
+.sheet-dialog{position:fixed;inset:auto 0 0;margin:0 auto;width:min(100%,520px);max-height:calc(100svh - 32px);padding:20px 24px calc(28px + env(safe-area-inset-bottom));border:0;border-top:1px solid #333;border-radius:12px 12px 0 0;color:var(--text);background:#181818;overflow-y:auto;overscroll-behavior:contain}
+.sheet-dialog::backdrop{background:#0008}
+.dialog-top{height:36px;position:relative}
+.grab{width:30px;height:2px;background:#555;margin:0 auto}
+.close-btn{display:grid;place-items:center;position:absolute;top:-8px;right:-8px;width:40px;height:40px;padding:0;background:none;border:0;font-size:26px;font-weight:300;color:#aaa}
+.sheet-dialog h2{font-size:24px;line-height:1.2;letter-spacing:-.025em;font-weight:500;margin:6px 0 12px}
+.sheet-dialog h3,.filter-title{font-size:14px;line-height:1.4;font-weight:500;margin:26px 0 12px}
+.ranges,.filter-categories{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.filter-categories{grid-template-columns:repeat(3,1fr)}
+.range-option,.filter-chip{min-height:44px;padding:10px 6px;border:1px solid #3b3b3b;border-radius:4px;background:none;font-size:14px;font-weight:400}
+.range-option.active,.filter-chip.active{border-color:#ddd;background:#eee;color:#111}
+.filter-toggles{display:flex;gap:10px;margin:20px 0 28px}
+.filter-toggles .filter-chip{flex:1}
+.filter-actions{display:flex;align-items:center;gap:24px;margin-top:24px}
+.filter-actions .secondary{padding:12px 8px}
+#searchInput{width:100%;padding:14px 0;margin:8px 0 24px;background:none;border:0;border-bottom:1px solid #555;border-radius:0;color:#fff;font-size:18px}
+.detail-photo{width:100%;height:128px;object-fit:cover;margin:4px 0 16px;border-radius:3px}
+.detail-meta{display:flex;gap:8px 16px;flex-wrap:wrap;color:#ccc;font-size:14px;line-height:1.6;margin:18px 0}
+.detail-actions{display:flex;gap:12px;margin:22px 0 28px}
+.detail-actions button{flex:1;font-size:14px}
+.detail-actions .outline{border:1px solid #555;background:none;color:#eee}
+.review-tabs{display:flex;justify-content:space-between;gap:14px;border-bottom:1px solid #333;margin-bottom:4px}
+.review-tab{position:relative;min-height:44px;padding:10px 0;border:0;background:none;font-size:14px;color:var(--muted)}
+.review-tab.active{color:#fff}
+.review-tab.active:after{content:"";position:absolute;bottom:-1px;left:0;right:0;height:1px;background:#eee}
+.review-card{padding:20px 0;border-bottom:1px solid #303030}
+.review-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.review-by{flex:1;font-size:14px}.review-by small{display:block;margin-top:5px;color:var(--muted);font-size:12px}
+.review-source{font-size:12px;color:var(--muted)}
+.review-card p{font-size:16px;line-height:1.6;margin:8px 0 0}
+.review-foot,.demo-label,.reviews-note{font-size:12px;line-height:1.6;color:var(--muted)}
+.review-foot{margin-top:10px}.review-stars{font-size:13px;letter-spacing:1px;color:#ddd}.reviews-note{margin:20px 0 0}
+.route-preview{padding:24px 0;margin:12px 0;border-top:1px solid #333;border-bottom:1px solid #333}
+.route-preview strong{display:block;font-size:36px;font-weight:450;margin:8px 0}
+.route-preview .muted{margin:0}.external-link{margin-top:20px;font-size:14px}
+.toast{position:absolute;z-index:100;left:24px;right:24px;bottom:calc(82px + env(safe-area-inset-bottom));padding:12px 16px;background:#eee;color:#111;border-radius:4px;font-size:14px;text-align:center;opacity:0;pointer-events:none}
+.toast.show{opacity:1}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(min-width:800px){.app{max-width:520px;margin:auto;border-left:1px solid #222;border-right:1px solid #222}}
+@media(max-width:350px){.topbar{padding-left:20px;padding-right:20px;gap:10px}.reel-content{left:20px;right:20px}.dish{font-size:27px}.location-pill{font-size:13px}.range-pill{font-size:13px}}
+@media(max-height:690px){.reel-content{bottom:calc(80px + env(safe-area-inset-bottom))}.dish{font-size:27px}.action-stack{margin-top:12px}.detail-photo{height:90px}.hero-card p{margin-bottom:28px}.demo-note{margin-top:20px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
   </style>
 </head>
 <body>
 <div class="app" id="app">
-  <div class="blur-orb orb-a"></div><div class="blur-orb orb-b"></div><div class="noise"></div>
 
   <section class="landing" id="landing">
-    <div class="hero-card glass">
-      <div class="mark">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s6-4.35 6-11a6 6 0 1 0-12 0c0 6.65 6 11 6 11Z"/><circle cx="12" cy="10" r="2.2"/></svg>
-      </div>
-      <div class="eyebrow">Food around you</div>
+    <div class="hero-card">
+      <div class="eyebrow">Nearby</div>
       <h1>What’s good<br>nearby?</h1>
-      <p>Find your next bite. Food, reviews, and places around you.</p>
+      <p>Find your next bite.</p>
       <button class="primary" id="locateBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8" opacity=".3"/></svg>
         <span>Use my location</span>
       </button>
-      <button class="secondary" id="demoBtn">Preview nearby food</button><div class="demo-note">Prototype · sample food &amp; reviews</div>
+      <button class="secondary" id="demoBtn">Preview nearby food</button><div class="demo-note">Demo · sample food &amp; reviews</div>
     </div>
   </section>
 
   <main class="home" id="home" inert>
     <header class="topbar">
       <button class="location-pill" id="areaBtn" aria-label="Location options"><span id="locationName">Ampang · Demo</span></button>
-      <button class="range-pill" id="rangeBtn" aria-label="Distance filter"><span id="rangeText">1 km</span></button>
+      <button class="range-pill" id="rangeBtn" aria-label="Food filters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2.5" fill="#151515"/><circle cx="15" cy="17" r="2.5" fill="#151515"/></svg><span id="rangeText">1 km</span></button>
       <button class="icon-btn" id="searchBtn" aria-label="Search food">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
       </button>
     </header>
 
-    <div class="filter-bar" aria-label="Food filters">
-      <button class="filter-chip active" data-category="all" aria-pressed="true">All food</button>
-      <button class="filter-chip" data-category="meals" aria-pressed="false">Meals</button>
-      <button class="filter-chip" data-category="sweet" aria-pressed="false">Sweet</button>
-      <button class="filter-chip" id="openBtn" aria-pressed="false">Open now</button>
-      <button class="filter-chip" id="budgetBtn" aria-pressed="false">Under RM20</button>
-    </div>
     <section class="feed" id="feed" aria-label="Nearby food feed" tabindex="0"></section>
 
     <section class="map-screen" id="mapScreen" inert aria-label="Demo food map">
@@ -248,11 +171,11 @@
       <div class="map-label">Ampang · Demo map</div>
       <div class="me-dot" aria-hidden="true"></div>
       <div id="mapPins"></div>
-      <div class="map-card glass" id="mapCard"></div>
+      <div class="map-card" id="mapCard"></div>
     </section>
 
     <section class="saved-screen" id="savedScreen" inert>
-      <h2>Saved</h2><p>Food worth coming back for.</p>
+      <h2>Saved</h2>
       <div class="saved-grid" id="savedGrid"></div>
     </section>
 
@@ -264,21 +187,33 @@
   </main>
 
   <dialog class="sheet-dialog" id="rangeDialog" aria-labelledby="rangeTitle">
-    <div class="dialog-top"><div class="grab"></div><button class="close-btn" data-close aria-label="Close distance filter">×</button></div>
-    <h2 id="rangeTitle">How nearby?</h2><p class="muted">Distance in the Ampang demo.</p><div class="ranges">
+    <div class="dialog-top"><div class="grab"></div><button class="close-btn" data-close aria-label="Close filters">×</button></div>
+    <h2 id="rangeTitle">Filters</h2><h3>Distance</h3><div class="ranges">
       <button class="range-option" data-range="500" aria-pressed="false">500m</button><button class="range-option active" data-range="1000" aria-pressed="true">1km</button><button class="range-option" data-range="3000" aria-pressed="false">3km</button><button class="range-option" data-range="5000" aria-pressed="false">5km</button>
+    </div><h3>Food</h3>
+    <div class="filter-options" aria-label="Food filters">
+      <div class="filter-categories">
+        <button class="filter-chip active" data-category="all" aria-pressed="true">All food</button>
+        <button class="filter-chip" data-category="meals" aria-pressed="false">Meals</button>
+        <button class="filter-chip" data-category="sweet" aria-pressed="false">Sweet</button>
+      </div>
+      <div class="filter-toggles">
+        <button class="filter-chip" id="openBtn" aria-pressed="false">Open now</button>
+        <button class="filter-chip" id="budgetBtn" aria-pressed="false">Under RM20</button>
+      </div>
     </div>
+    <div class="filter-actions"><button class="primary" id="applyFilters">Show food</button><button class="secondary" id="resetFilters">Reset</button></div>
   </dialog>
   <dialog class="sheet-dialog search-dialog" id="searchDialog" aria-labelledby="searchTitle">
     <div class="dialog-top"><div class="grab"></div><button class="close-btn" data-close aria-label="Close search">×</button></div>
-    <h2 id="searchTitle">What are you craving?</h2>
+    <h2 id="searchTitle">Search food</h2>
     <form id="searchForm"><label class="sr-only" for="searchInput">Search food or places</label><input id="searchInput" type="search" placeholder="Ramen, burgers, a place…" autocomplete="off" /><button class="primary" type="submit">Show food</button></form>
     <button class="secondary" id="clearSearch">Clear search</button>
   </dialog>
   <dialog class="sheet-dialog detail-dialog" id="detailDialog" aria-labelledby="detailTitle"><div id="detailBody"></div></dialog>
   <dialog class="sheet-dialog" id="areaDialog" aria-labelledby="areaTitle">
     <div class="dialog-top"><div class="grab"></div><button class="close-btn" data-close aria-label="Close location options">×</button></div>
-    <h2 id="areaTitle">Food around you</h2><p class="muted">This prototype has sample food in Ampang. Your location stays in this browser; live nearby results will come later.</p>
+    <h2 id="areaTitle">Food around you</h2><p class="muted">Sample food in Ampang. GPS stays in this browser; live nearby results are coming later.</p>
     <button class="primary" id="retryLocation">Use my location</button><button class="secondary" id="useDemo">Browse Ampang demo</button>
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -328,10 +263,10 @@ $('demoBtn').onclick=enter;$('locateBtn').onclick=useLocation;$('retryLocation')
 $('useDemo').onclick=()=>{$('locationName').textContent='Ampang · Demo';$('areaDialog').close();};
 $('areaBtn').onclick=()=>$('areaDialog').showModal();
 const observer = new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('.reel').forEach(r=>r.classList.remove('active'));e.target.classList.add('active');activeId=e.target.dataset.id;}}),{root:$('feed'),threshold:.65});
-function actionButtons(f){return `<div class="action-stack"><div><button class="action" data-action="reviews" data-id="${f.id}" aria-label="Reviews for ${esc(f.dish)}">${svg.reviews}</button><div class="action-label">Reviews</div></div><div><button class="action save ${saved.has(f.id)?'is-saved':''}" data-action="save" data-id="${f.id}" aria-label="Save ${esc(f.dish)}" aria-pressed="${saved.has(f.id)}">${svg.save}</button><div class="action-label">Save</div></div><div><button class="action" data-action="go" data-id="${f.id}" aria-label="Directions for ${esc(f.dish)}">${svg.dir}</button><div class="action-label">Go</div></div></div>`;}
+function actionButtons(f){return `<div class="action-stack"><button class="action review-action" data-action="reviews" data-id="${f.id}" aria-label="Reviews for ${esc(f.dish)}">${svg.reviews}<span>Reviews</span></button><button class="action save ${saved.has(f.id)?'is-saved':''}" data-action="save" data-id="${f.id}" aria-label="Save ${esc(f.dish)}" aria-pressed="${saved.has(f.id)}">${svg.save}</button><button class="action" data-action="go" data-id="${f.id}" aria-label="Directions for ${esc(f.dish)}">${svg.dir}</button></div>`;}
 function renderFeed(){
   observer.disconnect();const items=filtered();
-  $('feed').innerHTML=items.length?items.map((f,i)=>`<article class="reel ${i===0?'active':''}" data-id="${f.id}" aria-label="${esc(f.dish)} at ${esc(f.restaurant)}"><div class="reel-bg" style="background-image:url('${f.img}')" role="img" aria-label="${esc(f.dish)} stock photo"></div><div class="source-tag">${f.source==='Google'?'Google review':f.source+' post'} · Sample</div><div class="reel-content"><div class="meta"><div class="distance">${distance(f)} away · ${f.open?'Open now':'Closed'}</div><button class="dish-button" data-action="details" data-id="${f.id}" aria-label="About ${esc(f.dish)}"><h2 class="dish">${f.dish}</h2></button><p class="restaurant">${f.restaurant}</p><div class="rating-line"><button class="rating-button" data-action="reviews" data-id="${f.id}" data-source="Google" aria-label="Google reviews for ${esc(f.dish)}"><span class="star">★</span> ${f.rating} <span class="tiny-sep">(${f.count})</span></button><span class="tiny-sep">·</span><span>RM${f.price}</span></div><div class="source-links">${['Google','Instagram','TikTok'].map(source=>`<button class="source-link" data-action="reviews" data-id="${f.id}" data-source="${source}" aria-label="${source} reviews for ${esc(f.dish)}">${source}</button>`).join('')}</div></div>${actionButtons(f)}</div>${i===0&&items.length>1?`<div class="swipe-hint">Scroll for more ${svg.down}</div>`:''}</article>`).join(''):'<div class="empty-state"><h2>No bites found</h2><p>Try a wider distance or change your filters.</p><button class="primary" data-action="reset">Reset filters</button></div>';
+  $('feed').innerHTML=items.length?items.map((f,i)=>`<article class="reel ${i===0?'active':''}" data-id="${f.id}" aria-label="${esc(f.dish)} at ${esc(f.restaurant)}"><div class="reel-bg" style="background-image:url('${f.img}')" role="img" aria-label="${esc(f.dish)} stock photo"></div><div class="reel-content"><button class="dish-button" data-action="details" data-id="${f.id}" aria-label="About ${esc(f.dish)}"><h2 class="dish">${f.dish}</h2></button><p class="restaurant">${f.restaurant}</p><div class="rating-line"><button class="rating-button" data-action="reviews" data-id="${f.id}" data-source="Google" aria-label="Google reviews for ${esc(f.dish)}">★ ${f.rating}</button><span class="tiny-sep">·</span><span>RM${f.price}</span><span class="tiny-sep">·</span><span>${distance(f)}</span></div>${actionButtons(f)}</div></article>`).join(''):'<div class="empty-state"><h2>No bites found</h2><p>Try a wider distance or fewer filters.</p><button class="primary" data-action="reset">Reset filters</button></div>';
   $('feed').scrollTop=0;activeId=items[0]?.id||null;document.querySelectorAll('.reel').forEach(r=>observer.observe(r));
 }
 function renderSaved(){
@@ -354,28 +289,29 @@ function renderMap(){
   let empty=$('mapEmpty');if(!empty){empty=document.createElement('div');empty.id='mapEmpty';empty.className='map-empty';$('mapScreen').append(empty);}empty.innerHTML=items.length?'':'No food matches these filters. <button class="secondary" data-action="reset">Reset filters</button>';
 }
 function setView(view){currentView=view;document.querySelectorAll('.nav-btn').forEach(b=>{const selected=b.dataset.view===view;b.classList.toggle('active',selected);selected?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current');});
-  ['map','saved'].forEach(v=>{const el=$(v+'Screen');el.classList.toggle('show',view===v);el.inert=view!==v;});$('feed').inert=view!=='discover';document.querySelector('.filter-bar').hidden=view==='saved';
+  ['map','saved'].forEach(v=>{const el=$(v+'Screen');el.classList.toggle('show',view===v);el.inert=view!==v;});$('feed').inert=view!=='discover';$('rangeBtn').hidden=view==='saved';
 }
 function refresh(){renderFeed();renderMap();}
-function syncFilters(){document.querySelectorAll('[data-category]').forEach(b=>{const on=b.dataset.category===category;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});[['openBtn',onlyOpen],['budgetBtn',budget]].forEach(([id,on])=>{$(id).classList.toggle('active',on);$(id).setAttribute('aria-pressed',String(on));});$('rangeText').textContent=range===500?'500 m':`${range/1000} km`;document.querySelectorAll('[data-range]').forEach(b=>{const on=Number(b.dataset.range)===range;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});$('searchBtn').classList.toggle('active',!!query);$('searchBtn').setAttribute('aria-label',query?`Search food: ${query}`:'Search food');}
+function syncFilters(){document.querySelectorAll('[data-category]').forEach(b=>{const on=b.dataset.category===category;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});[['openBtn',onlyOpen],['budgetBtn',budget]].forEach(([id,on])=>{$(id).classList.toggle('active',on);$(id).setAttribute('aria-pressed',String(on));});const extra=(category!=='all'?1:0)+(onlyOpen?1:0)+(budget?1:0);$('rangeText').textContent=(range===500?'500 m':`${range/1000} km`)+(extra?` · ${extra}`:'');$('rangeBtn').classList.toggle('active',!!extra);$('applyFilters').textContent=`Show ${filtered().length} places`;document.querySelectorAll('[data-range]').forEach(b=>{const on=Number(b.dataset.range)===range;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});$('searchBtn').classList.toggle('active',!!query);$('searchBtn').setAttribute('aria-label',query?`Search food: ${query}`:'Search food');}
 function resetFilters(){range=1000;category='all';query='';onlyOpen=false;budget=false;$('searchInput').value='';syncFilters();refresh();}
 document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>setView(b.dataset.view));
 document.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>{category=b.dataset.category;syncFilters();refresh();});
 $('openBtn').onclick=()=>{onlyOpen=!onlyOpen;syncFilters();refresh();};$('budgetBtn').onclick=()=>{budget=!budget;syncFilters();refresh();};
 $('rangeBtn').onclick=()=>$('rangeDialog').showModal();
-document.querySelectorAll('[data-range]').forEach(b=>b.onclick=()=>{range=Number(b.dataset.range);syncFilters();refresh();$('rangeDialog').close();});
+$('applyFilters').onclick=()=>$('rangeDialog').close();$('resetFilters').onclick=resetFilters;
+document.querySelectorAll('[data-range]').forEach(b=>b.onclick=()=>{range=Number(b.dataset.range);syncFilters();refresh();});
 $('searchBtn').onclick=()=>{$('searchInput').value=query;$('searchDialog').showModal();$('searchInput').focus();};
-$('searchForm').onsubmit=e=>{e.preventDefault();query=$('searchInput').value.trim();syncFilters();refresh();setView('discover');$('searchDialog').close();notify(query?`Searching for “${query}”`:'Showing all food');};
+$('searchForm').onsubmit=e=>{e.preventDefault();query=$('searchInput').value.trim();syncFilters();refresh();setView('discover');$('searchDialog').close();};
 $('clearSearch').onclick=()=>{query='';$('searchInput').value='';syncFilters();refresh();$('searchDialog').close();};
 function reviewsFor(f){return [{source:'Google',author:'Alex L.',date:'2 days ago',rating:5,text:f.google[0]},{source:'Google',author:'Jamie T.',date:'1 week ago',rating:4,text:f.google[1]},{source:'Instagram',author:'@weekend.bites.demo',date:'3 days ago',text:f.social},{source:'TikTok',author:'@firstbite.demo',date:'5 days ago',text:f.tiktok}];}
-function reviewCards(f){const items=reviewsFor(f).filter(r=>reviewSource==='All'||r.source===reviewSource);return items.map(r=>`<article class="review-card"><div class="review-head"><span class="review-avatar" aria-hidden="true">${r.author.replace('@','').slice(0,1)}</span><div class="review-by">${r.author}<small>${r.date} · Sample</small></div><span class="review-source">${r.source}</span></div>${r.rating?`<div class="review-stars" aria-label="${r.rating} out of 5 stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>`:'<span class="demo-label">'+(r.source==='Instagram'?'Post preview':'Video preview')+'</span>'}<p>${r.text}</p>${r.source!=='Google'?'<div class="review-foot">Sample '+(r.source==='Instagram'?'post':'video description')+' · no live media connected</div>':''}</article>`).join('');}
+function reviewCards(f){const items=reviewsFor(f).filter(r=>reviewSource==='All'||r.source===reviewSource);return items.map(r=>`<article class="review-card"><div class="review-head"><div class="review-by">${r.author}<small>${r.date} · Sample</small></div><span class="review-source">${r.source}</span></div>${r.rating?`<div class="review-stars" aria-label="${r.rating} out of 5 stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>`:'<span class="demo-label">'+(r.source==='Instagram'?'Post preview':'Video preview')+'</span>'}<p>${r.text}</p>${r.source!=='Google'?'<div class="review-foot">Sample '+(r.source==='Instagram'?'post':'video description')+' · no live media connected</div>':''}</article>`).join('');}
 function renderDetail(id,source='All'){
   detailId=id;reviewSource=source;const f=getFood(id);
-  $('detailBody').innerHTML=`<div class="dialog-top"><div class="grab"></div><button class="close-btn" data-close aria-label="Close place details">×</button></div><img class="detail-photo" src="${f.img}" alt="${f.dish} stock photo"><h2 id="detailTitle">${f.dish}</h2><p class="muted">${f.restaurant} · Ampang · Demo place</p><p class="muted">${f.description}</p><div class="detail-meta"><span>★ ${f.rating} · ${f.count} sample ratings</span><span>RM${f.price}</span><span>${distance(f)}</span><span>${f.open?'Open now':'Closed'} · ${f.hours}</span></div><div class="detail-actions"><button class="primary outline detail-save" data-action="save" data-id="${f.id}" aria-pressed="${saved.has(f.id)}">${saved.has(f.id)?'Saved':'Save place'}</button><button class="primary" data-action="go" data-id="${f.id}">Directions</button></div><h3>Reviews & posts</h3><div class="review-tabs" aria-label="Review source">${['All','Google','Instagram','TikTok'].map(s=>`<button class="review-tab ${s===source?'active':''}" data-review-source="${s}" aria-pressed="${s===source}">${s}</button>`).join('')}</div><div id="reviewList">${reviewCards(f)}</div><p class="reviews-note">All places, reviews, ratings, hours, and distances here are sample data. Photos are illustrative. Live Google reviews and social posts are not connected.</p>`;
+  $('detailBody').innerHTML=`<div class="dialog-top"><div class="grab"></div><button class="close-btn" data-close aria-label="Close place details">×</button></div><img class="detail-photo" src="${f.img}" alt="${f.dish} stock photo"><h2 id="detailTitle">${f.dish}</h2><p class="muted">${f.restaurant} · Demo place</p><div class="detail-meta"><span>★ ${f.rating} (${f.count})</span><span>RM${f.price}</span><span>${distance(f)}</span><span>${f.open?'Open now':'Closed'} · ${f.hours}</span></div><div class="detail-actions"><button class="primary outline detail-save" data-action="save" data-id="${f.id}" aria-pressed="${saved.has(f.id)}">${saved.has(f.id)?'Saved':'Save place'}</button><button class="primary" data-action="go" data-id="${f.id}">Directions</button></div><div class="review-tabs" aria-label="Review source">${['All','Google','Instagram','TikTok'].map(s=>`<button class="review-tab ${s===source?'active':''}" data-review-source="${s}" aria-pressed="${s===source}">${s}</button>`).join('')}</div><div id="reviewList">${reviewCards(f)}</div><p class="reviews-note">Sample data &amp; illustrative photos. Social posts are previews; no live media.</p>`;
   $('detailDialog').scrollTop=0;if(!$('detailDialog').open)$('detailDialog').showModal();
 }
 function routePreview(id){const f=getFood(id);detailId=id;const minutes=Math.max(1,Math.round(f.meters/80));
-  $('detailBody').innerHTML=`<div class="dialog-top"><div class="grab"></div><button class="close-btn" data-close aria-label="Close directions">×</button></div><h2 id="detailTitle">Getting there</h2><p class="muted">${f.restaurant} · Ampang · Demo place</p><div class="route-preview"><span class="demo-label">Sample walking estimate</span><strong>${minutes} min</strong><p class="muted">${distance(f)} from the demo starting point</p></div><p class="muted">This place and route are fictional. You can search Google Maps for real ${f.dish.toLowerCase()} nearby.</p><a class="primary external-link" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(f.dish+' Ampang Malaysia')}" target="_blank" rel="noopener noreferrer">Find this food on Google Maps</a><button class="secondary" data-action="details" data-id="${f.id}">Back to place</button>`;
+  $('detailBody').innerHTML=`<div class="dialog-top"><div class="grab"></div><button class="close-btn" data-close aria-label="Close directions">×</button></div><h2 id="detailTitle">Getting there</h2><p class="muted">${f.restaurant} · Ampang · Demo place</p><div class="route-preview"><span class="demo-label">Demo walking estimate</span><strong>${minutes} min</strong><p class="muted">${distance(f)} from the demo starting point</p></div><p class="muted">Demo route. Search Google Maps for real places serving this food.</p><a class="primary external-link" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(f.dish+' Ampang Malaysia')}" target="_blank" rel="noopener noreferrer">Search Google Maps</a><button class="secondary" data-action="details" data-id="${f.id}">Back to place</button>`;
   $('detailDialog').scrollTop=0;if(!$('detailDialog').open)$('detailDialog').showModal();
 }
 document.addEventListener('click',e=>{
