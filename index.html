@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0b" />
+  <title>NEARBY — Social Food Discovery</title>
+  <style>
+    :root{
+      --bg:#09090b;
+      --glass:rgba(22,22,26,.52);
+      --glass-2:rgba(255,255,255,.08);
+      --stroke:rgba(255,255,255,.14);
+      --text:#fff;
+      --muted:rgba(255,255,255,.62);
+      --shadow:0 24px 80px rgba(0,0,0,.45);
+      --radius:28px;
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--text);height:100%;overflow:hidden}
+    button,input{font:inherit}
+    button{color:inherit}
+    .app{height:100svh;position:relative;overflow:hidden;background:
+      radial-gradient(circle at 12% 12%,rgba(255,150,65,.16),transparent 28%),
+      radial-gradient(circle at 90% 16%,rgba(219,75,126,.12),transparent 24%),
+      linear-gradient(180deg,#141416 0%,#08080a 58%,#050506 100%)}
+
+    .noise{position:absolute;inset:0;pointer-events:none;opacity:.22;mix-blend-mode:soft-light;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.12'/%3E%3C/svg%3E")}
+    .blur-orb{position:absolute;border-radius:999px;filter:blur(70px);opacity:.28;pointer-events:none;transition:all .8s ease}
+    .orb-a{width:42vw;height:42vw;left:-8vw;top:-7vw;background:#ff8733}
+    .orb-b{width:40vw;height:40vw;right:-12vw;top:28vh;background:#c5347b}
+
+    .glass{background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.045));backdrop-filter:blur(26px) saturate(140%);-webkit-backdrop-filter:blur(26px) saturate(140%);border:1px solid var(--stroke);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),var(--shadow)}
+
+    /* LANDING */
+    .landing{position:absolute;inset:0;z-index:10;display:grid;place-items:center;padding:28px;transition:opacity .55s ease,transform .55s cubic-bezier(.2,.9,.2,1)}
+    .landing.hide{opacity:0;transform:scale(1.04);pointer-events:none}
+    .hero-card{width:min(92vw,460px);padding:34px 28px 26px;border-radius:36px;text-align:center;position:relative;overflow:hidden}
+    .hero-card:after{content:"";position:absolute;inset:-35% -10% auto;height:48%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);transform:rotate(-8deg);filter:blur(8px);pointer-events:none}
+    .mark{width:58px;height:58px;border-radius:19px;margin:2px auto 30px;display:grid;place-items:center;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.18);box-shadow:0 12px 38px rgba(0,0,0,.25)}
+    .mark svg{width:26px;height:26px}
+    .eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.52);margin-bottom:12px}
+    h1{margin:0;font-size:clamp(42px,9vw,62px);line-height:.92;letter-spacing:-.065em;font-weight:750}
+    .hero-card p{margin:18px auto 30px;color:var(--muted);font-size:15px;line-height:1.55;max-width:310px}
+    .primary{width:100%;border:0;border-radius:18px;padding:16px 18px;background:#fff;color:#111;font-weight:700;display:flex;gap:10px;align-items:center;justify-content:center;cursor:pointer;transition:transform .18s ease,background .18s ease}
+    .primary:active{transform:scale(.985)}
+    .primary svg{width:18px;height:18px}
+    .secondary{border:0;background:transparent;color:rgba(255,255,255,.64);font-size:13px;margin-top:14px;cursor:pointer;padding:8px}
+
+    /* HOME */
+    .home{position:absolute;inset:0;opacity:0;pointer-events:none;transform:translateY(16px);transition:opacity .55s ease .15s,transform .55s ease .15s;z-index:5}
+    .home.show{opacity:1;pointer-events:auto;transform:none}
+    .topbar{position:absolute;z-index:30;left:0;right:0;top:0;padding:max(16px,env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:10px;pointer-events:none}
+    .location-pill,.range-pill,.icon-btn{pointer-events:auto;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,.13);background:rgba(17,17,20,.46);backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%);box-shadow:0 10px 26px rgba(0,0,0,.24);display:flex;align-items:center}
+    .location-pill{padding:0 14px;gap:8px;font-weight:650;font-size:13px;max-width:55vw}
+    .location-pill .dot{width:7px;height:7px;border-radius:999px;background:#7cff80;box-shadow:0 0 14px rgba(124,255,128,.75)}
+    .location-pill span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .range-pill{margin-left:auto;padding:0 13px;font-size:12px;color:rgba(255,255,255,.78);cursor:pointer}
+    .icon-btn{width:44px;justify-content:center;cursor:pointer}
+    .icon-btn svg{width:18px;height:18px}
+
+    .feed{height:100%;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none}
+    .feed::-webkit-scrollbar{display:none}
+    .reel{height:100svh;scroll-snap-align:start;position:relative;overflow:hidden;background:#111}
+    .reel-bg{position:absolute;inset:-2%;background-size:cover;background-position:center;transform:scale(1.03);transition:transform 6s ease}
+    .reel.active .reel-bg{transform:scale(1.1)}
+    .reel:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.34) 0%,rgba(0,0,0,.06) 26%,rgba(0,0,0,.06) 52%,rgba(0,0,0,.78) 91%,#08080a 100%)}
+    .reel:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.14),transparent 40%,rgba(0,0,0,.06));z-index:1}
+    .reel-content{position:absolute;z-index:4;left:18px;right:18px;bottom:calc(92px + env(safe-area-inset-bottom));display:flex;gap:14px;align-items:end}
+    .meta{flex:1;min-width:0}
+    .distance{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:650;padding:8px 11px;border-radius:999px;background:rgba(14,14,16,.42);border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);margin-bottom:10px}
+    .distance i{display:block;width:6px;height:6px;border-radius:50%;background:#78ff92}
+    .dish{font-size:30px;line-height:1.02;letter-spacing:-.04em;font-weight:730;margin:0 0 7px;text-shadow:0 2px 22px rgba(0,0,0,.35)}
+    .restaurant{font-size:14px;font-weight:650;margin:0 0 5px;color:rgba(255,255,255,.93)}
+    .creator{font-size:12px;color:rgba(255,255,255,.62)}
+    .action-stack{display:grid;gap:11px}
+    .action{width:46px;height:46px;border-radius:16px;border:1px solid rgba(255,255,255,.15);background:rgba(16,16,18,.42);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:grid;place-items:center;cursor:pointer}
+    .action svg{width:20px;height:20px}
+    .action-label{font-size:9px;text-align:center;color:rgba(255,255,255,.6);margin-top:-5px}
+    .source-tag{position:absolute;z-index:5;right:18px;top:92px;font-size:10px;letter-spacing:.11em;text-transform:uppercase;padding:7px 9px;border-radius:999px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(12px)}
+    .swipe-hint{position:absolute;z-index:4;bottom:calc(78px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);opacity:.5;font-size:10px;letter-spacing:.16em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:5px;animation:float 1.6s ease-in-out infinite}
+    .swipe-hint svg{width:15px;height:15px}
+    @keyframes float{50%{transform:translate(-50%,-5px)}}
+
+    .bottom-nav{position:absolute;z-index:40;left:50%;transform:translateX(-50%);bottom:max(14px,env(safe-area-inset-bottom));height:62px;width:min(calc(100% - 28px),410px);border-radius:24px;display:grid;grid-template-columns:repeat(3,1fr);padding:6px;background:rgba(12,12,14,.62);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(28px) saturate(150%);-webkit-backdrop-filter:blur(28px) saturate(150%);box-shadow:0 14px 48px rgba(0,0,0,.42)}
+    .nav-btn{border:0;border-radius:18px;background:transparent;color:rgba(255,255,255,.52);display:flex;gap:6px;align-items:center;justify-content:center;font-weight:650;font-size:12px;cursor:pointer}
+    .nav-btn svg{width:18px;height:18px}
+    .nav-btn.active{color:#fff;background:rgba(255,255,255,.1);box-shadow:inset 0 1px rgba(255,255,255,.08)}
+
+    /* MAP */
+    .map-screen,.saved-screen{position:absolute;z-index:12;inset:0;background:#0b0b0d;opacity:0;pointer-events:none;transition:opacity .3s ease;padding-top:88px}
+    .map-screen.show,.saved-screen.show{opacity:1;pointer-events:auto}
+    .map-canvas{position:absolute;inset:0;background:
+      linear-gradient(30deg,rgba(255,255,255,.018) 12%,transparent 12.5%,transparent 87%,rgba(255,255,255,.018) 87.5%,rgba(255,255,255,.018)),
+      linear-gradient(150deg,rgba(255,255,255,.018) 12%,transparent 12.5%,transparent 87%,rgba(255,255,255,.018) 87.5%,rgba(255,255,255,.018)),
+      linear-gradient(30deg,rgba(255,255,255,.018) 12%,transparent 12.5%,transparent 87%,rgba(255,255,255,.018) 87.5%,rgba(255,255,255,.018));
+      background-size:62px 108px;background-position:0 0,0 0,31px 54px;background-color:#111216}
+    .road{position:absolute;background:rgba(255,255,255,.07);border-radius:999px;transform-origin:left center}
+    .road.r1{width:120%;height:16px;left:-10%;top:34%;transform:rotate(-12deg)}
+    .road.r2{width:110%;height:12px;left:-12%;top:58%;transform:rotate(18deg)}
+    .road.r3{width:86%;height:9px;left:14%;top:72%;transform:rotate(-4deg)}
+    .road.r4{width:12px;height:78%;left:57%;top:8%;transform:rotate(8deg)}
+    .map-overlay{position:absolute;inset:0;background:radial-gradient(circle at 50% 48%,transparent 0 30%,rgba(0,0,0,.2) 72%,rgba(0,0,0,.48) 100%)}
+    .pin{position:absolute;z-index:3;width:60px;height:60px;border-radius:22px;padding:3px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.23);backdrop-filter:blur(12px);box-shadow:0 12px 36px rgba(0,0,0,.35);cursor:pointer;transition:transform .2s ease}
+    .pin:hover{transform:scale(1.08)}
+    .pin img{width:100%;height:100%;object-fit:cover;border-radius:18px;display:block}
+    .pin:after{content:"";position:absolute;left:50%;bottom:-7px;width:13px;height:13px;background:rgba(255,255,255,.17);border-right:1px solid rgba(255,255,255,.22);border-bottom:1px solid rgba(255,255,255,.22);transform:translateX(-50%) rotate(45deg);backdrop-filter:blur(12px)}
+    .pin.p1{left:16%;top:24%}.pin.p2{right:17%;top:35%}.pin.p3{left:34%;top:54%}.pin.p4{right:27%;top:67%}
+    .me-dot{position:absolute;z-index:2;left:51%;top:46%;width:16px;height:16px;border-radius:50%;background:#69a7ff;border:3px solid #fff;box-shadow:0 0 0 12px rgba(105,167,255,.16),0 0 30px rgba(105,167,255,.45)}
+    .map-card{position:absolute;z-index:7;left:16px;right:16px;bottom:94px;border-radius:25px;padding:10px;display:flex;gap:12px;align-items:center;background:rgba(15,15,18,.63);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(24px);box-shadow:0 20px 55px rgba(0,0,0,.42)}
+    .map-card img{width:82px;height:82px;object-fit:cover;border-radius:18px}
+    .map-card h3{margin:0 0 5px;font-size:16px;letter-spacing:-.02em}.map-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.5}.mini-cta{margin-left:auto;width:42px;height:42px;border-radius:14px;border:0;background:#fff;color:#111;display:grid;place-items:center}.mini-cta svg{width:17px}
+
+    /* SAVED */
+    .saved-screen{padding:98px 18px 100px;overflow:auto;background:linear-gradient(180deg,#111216,#09090b)}
+    .saved-screen h2{font-size:32px;letter-spacing:-.05em;margin:8px 0 5px}.saved-screen>p{margin:0 0 22px;color:var(--muted);font-size:13px}
+    .saved-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .saved-card{aspect-ratio:.78;border-radius:24px;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,.1);background:#18181b}
+    .saved-card img{width:100%;height:100%;object-fit:cover}.saved-card:after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 45%,rgba(0,0,0,.82))}.saved-card div{position:absolute;z-index:2;left:13px;right:13px;bottom:13px}.saved-card b{display:block;font-size:15px}.saved-card span{font-size:11px;color:rgba(255,255,255,.65)}
+
+    /* RANGE SHEET */
+    .sheet-backdrop{position:absolute;z-index:70;inset:0;background:rgba(0,0,0,.38);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .2s}
+    .sheet-backdrop.show{opacity:1;pointer-events:auto}
+    .sheet{position:absolute;left:12px;right:12px;bottom:12px;border-radius:30px;padding:12px 16px calc(18px + env(safe-area-inset-bottom));background:rgba(21,21,24,.87);border:1px solid rgba(255,255,255,.13);box-shadow:0 22px 90px rgba(0,0,0,.58);transform:translateY(110%);transition:transform .35s cubic-bezier(.2,.9,.2,1)}
+    .sheet-backdrop.show .sheet{transform:none}.grab{width:42px;height:4px;border-radius:999px;background:rgba(255,255,255,.2);margin:2px auto 18px}.sheet h3{margin:0 0 14px;font-size:20px;letter-spacing:-.03em}.ranges{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.range-option{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);border-radius:16px;padding:13px 6px;font-size:12px;font-weight:650;cursor:pointer}.range-option.active{background:#fff;color:#111;border-color:#fff}
+
+    @media (min-width:800px){
+      .app{max-width:520px;margin:auto;border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06);box-shadow:0 0 80px rgba(0,0,0,.45)}
+      body{background:#050506}
+    }
+  </style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="blur-orb orb-a"></div><div class="blur-orb orb-b"></div><div class="noise"></div>
+
+  <section class="landing" id="landing">
+    <div class="hero-card glass">
+      <div class="mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s6-4.35 6-11a6 6 0 1 0-12 0c0 6.65 6 11 6 11Z"/><circle cx="12" cy="10" r="2.2"/></svg>
+      </div>
+      <div class="eyebrow">Food around you</div>
+      <h1>What’s good<br>nearby?</h1>
+      <p>See food people are posting around you. No lists. No digging.</p>
+      <button class="primary" id="locateBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8" opacity=".3"/></svg>
+        <span>Use my location</span>
+      </button>
+      <button class="secondary" id="demoBtn">Preview nearby food</button>
+    </div>
+  </section>
+
+  <main class="home" id="home">
+    <header class="topbar">
+      <div class="location-pill"><i class="dot"></i><span id="locationName">Nearby</span></div>
+      <button class="range-pill" id="rangeBtn"><span id="rangeText">1 km</span></button>
+      <button class="icon-btn" aria-label="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+      </button>
+    </header>
+
+    <section class="feed" id="feed"></section>
+
+    <section class="map-screen" id="mapScreen">
+      <div class="map-canvas"><div class="road r1"></div><div class="road r2"></div><div class="road r3"></div><div class="road r4"></div><div class="map-overlay"></div></div>
+      <div class="me-dot"></div>
+      <button class="pin p1" data-i="0"><img alt="food" src="https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=300&q=80"></button>
+      <button class="pin p2" data-i="1"><img alt="food" src="https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=300&q=80"></button>
+      <button class="pin p3" data-i="2"><img alt="food" src="https://images.unsplash.com/photo-1551782450-a2132b4ba21d?auto=format&fit=crop&w=300&q=80"></button>
+      <button class="pin p4" data-i="3"><img alt="food" src="https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=300&q=80"></button>
+      <div class="map-card glass" id="mapCard"></div>
+    </section>
+
+    <section class="saved-screen" id="savedScreen">
+      <h2>Saved</h2><p>Food worth coming back for.</p>
+      <div class="saved-grid" id="savedGrid"></div>
+    </section>
+
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-view="discover"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12 12 4l8 8-8 8-8-8Z"/><circle cx="12" cy="12" r="2.3"/></svg>Discover</button>
+      <button class="nav-btn" data-view="map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 6 5-2 8 3 5-2v13l-5 2-8-3-5 2V6Z"/><path d="M8 4v13M16 7v13"/></svg>Map</button>
+      <button class="nav-btn" data-view="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 4h12v17l-6-4-6 4V4Z"/></svg>Saved</button>
+    </nav>
+  </main>
+
+  <div class="sheet-backdrop" id="sheetBackdrop">
+    <div class="sheet"><div class="grab"></div><h3>How nearby?</h3><div class="ranges">
+      <button class="range-option" data-range="500 m">500m</button><button class="range-option active" data-range="1 km">1km</button><button class="range-option" data-range="3 km">3km</button><button class="range-option" data-range="5 km">5km</button>
+    </div></div>
+  </div>
+</div>
+
+<script>
+const FOOD = [
+  {dish:'Black Garlic Ramen',restaurant:'Ramen Bar',distance:'320 m',creator:'@klfoodie',source:'Instagram Reel',img:'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=88'},
+  {dish:'Crispy Xiao Long Bao',restaurant:'Dumpling House',distance:'460 m',creator:'@eatwithsarah',source:'Instagram Reel',img:'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=1200&q=88'},
+  {dish:'Smash Cheeseburger',restaurant:'Fifty/Fifty',distance:'680 m',creator:'@hungrykl',source:'Instagram Reel',img:'https://images.unsplash.com/photo-1551782450-a2132b4ba21d?auto=format&fit=crop&w=1200&q=88'},
+  {dish:'Burnt Butter Donut',restaurant:'Sunday Bakes',distance:'810 m',creator:'@makanmakan',source:'Instagram Reel',img:'https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=1200&q=88'}
+];
+const svg = {
+  save:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 4h12v17l-6-4-6 4V4Z"/></svg>`,
+  dir:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 11 18-8-8 18-2-8-8-2Z"/></svg>`,
+  play:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="5"/><path d="m10 9 5 3-5 3V9Z"/></svg>`,
+  down:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m7 10 5 5 5-5"/></svg>`
+};
+const feed = document.getElementById('feed');
+feed.innerHTML = FOOD.map((f,i)=>`<article class="reel ${i===0?'active':''}" data-i="${i}"><div class="reel-bg" style="background-image:url('${f.img}')"></div><div class="source-tag">${f.source}</div><div class="reel-content"><div class="meta"><div class="distance"><i></i>${f.distance} away</div><h2 class="dish">${f.dish}</h2><p class="restaurant">${f.restaurant}</p><div class="creator">${f.creator}</div></div><div class="action-stack"><div><button class="action play">${svg.play}</button><div class="action-label">Watch</div></div><div><button class="action save" data-i="${i}">${svg.save}</button><div class="action-label">Save</div></div><div><button class="action">${svg.dir}</button><div class="action-label">Go</div></div></div></div>${i===0?`<div class="swipe-hint">Swipe for more${svg.down}</div>`:''}</article>`).join('');
+
+const landing=document.getElementById('landing'), home=document.getElementById('home'), locationName=document.getElementById('locationName');
+function enter(label='Ampang · Nearby'){
+  locationName.textContent=label; landing.classList.add('hide'); home.classList.add('show');
+  setTimeout(()=>{landing.style.display='none'},700);
+}
+document.getElementById('demoBtn').onclick=()=>enter('Ampang · Nearby');
+document.getElementById('locateBtn').onclick=()=>{
+  const btn=document.getElementById('locateBtn');
+  const label=btn.querySelector('span');
+  label.textContent='Opening nearby food…';
+
+  // Never leave the user waiting on the landing screen. Open the feed first,
+  // then improve the location label when the browser returns a GPS fix.
+  enter('Finding your location…');
+
+  if(!navigator.geolocation){
+    locationName.textContent='Ampang · Nearby';
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    p=>{
+      locationName.textContent=`Near you · ${p.coords.latitude.toFixed(3)}, ${p.coords.longitude.toFixed(3)}`;
+    },
+    ()=>{
+      locationName.textContent='Ampang · Nearby';
+    },
+    {enableHighAccuracy:true,timeout:6500,maximumAge:60000}
+  );
+};
+
+const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('.reel').forEach(r=>r.classList.remove('active'));e.target.classList.add('active')}}),{root:feed,threshold:.65});
+document.querySelectorAll('.reel').forEach(r=>observer.observe(r));
+
+let saved=new Set([1]);
+function renderSaved(){
+  const grid=document.getElementById('savedGrid'); const items=[...saved].map(i=>FOOD[i]);
+  grid.innerHTML=items.length?items.map(f=>`<div class="saved-card"><img src="${f.img}" alt="${f.dish}"><div><b>${f.dish}</b><span>${f.restaurant} · ${f.distance}</span></div></div>`).join(''):`<div style="grid-column:1/-1;color:rgba(255,255,255,.5);padding:40px 4px">Nothing saved yet.</div>`;
+}
+document.querySelectorAll('.save').forEach(b=>b.onclick=()=>{const i=+b.dataset.i; saved.has(i)?saved.delete(i):saved.add(i); b.style.background=saved.has(i)?'rgba(255,255,255,.24)':'rgba(16,16,18,.42)'; renderSaved();});
+renderSaved();
+
+const mapScreen=document.getElementById('mapScreen'), savedScreen=document.getElementById('savedScreen');
+function showMapCard(i){const f=FOOD[i]; document.getElementById('mapCard').innerHTML=`<img src="${f.img}" alt="${f.dish}"><div><h3>${f.dish}</h3><p>${f.restaurant}<br>${f.distance} away</p></div><button class="mini-cta">${svg.dir}</button>`;}
+showMapCard(0);document.querySelectorAll('.pin').forEach(p=>p.onclick=()=>showMapCard(+p.dataset.i));
+
+document.querySelectorAll('.nav-btn').forEach(btn=>btn.onclick=()=>{
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+  mapScreen.classList.toggle('show',btn.dataset.view==='map'); savedScreen.classList.toggle('show',btn.dataset.view==='saved');
+});
+
+const backdrop=document.getElementById('sheetBackdrop');document.getElementById('rangeBtn').onclick=()=>backdrop.classList.add('show');
+backdrop.onclick=e=>{if(e.target===backdrop)backdrop.classList.remove('show')};
+document.querySelectorAll('.range-option').forEach(o=>o.onclick=()=>{document.querySelectorAll('.range-option').forEach(x=>x.classList.remove('active'));o.classList.add('active');document.getElementById('rangeText').textContent=o.dataset.range;backdrop.classList.remove('show')});
+</script>
+</body>
+</html>
